@@ -509,7 +509,7 @@ class Model(object):
                         if action is not None:
                             action_split = action.split()
                             action_split = action_split[-1][:-2]
-                            if(time_step < int(action_split)):
+                            if(time_step <= int(action_split)):
                                 ofile.write(action)
 
         except IOError:
