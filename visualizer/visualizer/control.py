@@ -11,6 +11,7 @@ from .network import *
 from .gui import *
 from .configuration import *
 from lazycbs import init
+from .createscen import *
 VERSION = '0.2.4'
 
 class VisualizerWindow(QMainWindow):
@@ -441,9 +442,15 @@ class VisualizerWindow(QMainWindow):
 
     def replan(self):
         file_name = self._file_dialog.selectedFiles()[0]
-        map_file_name = os.path.splitext(file_name)[0] + ".map"
-        self._model.save_to_file(os.path.splitext(file_name)[0] +"-instance"+ ".txt")
-        self._model.save_pending_answer_to_file(os.path.splitext(file_name)[0] +"-plan"+ ".txt")
+        map_file_name = os.path.splitext(file_name)[0] + ".ecbs"
+        instance_file_name = os.path.splitext(file_name)[0] +"-instance"+ ".txt"
+        plan_file_name = os.path.splitext(file_name)[0] +"-plan"+ ".txt"
+        self._model.save_to_file(instance_file_name) 
+        self._model.save_pending_answer_to_file(plan_file_name)
+        scene_file_name = convert(instance_file_name, plan_file_name, map_file_name,2)
+        print(map_file_name, scene_file_name)
+        temp=init(map_file_name, scene_file_name, 2, [(0, ((-1, -2), (-1, -2)), -2, -100)])
+        
     def create_all_pictures(self):
         directory = str(QFileDialog.getExistingDirectory(self, 'Select directory'))
         if directory is None or len(directory) == 0: 

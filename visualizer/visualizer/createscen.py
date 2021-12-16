@@ -5,12 +5,14 @@ import os
 from pathlib import Path
 import argparse
 import re
-def main(arg0, arg1, arg2, arg3, arg4):
+def main():
+    convert(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4])
+def convert(arg1, arg2, arg3, arg4):
     currentAgent = 0
     x_dim = 0
     y_dim = 0
     time_step = 0
-
+    
     with open(arg1, 'r') as instance_file:
         all_lines = instance_file.readlines()
         for line in all_lines:
@@ -25,11 +27,10 @@ def main(arg0, arg1, arg2, arg3, arg4):
                 time_step = int(split_line.pop())
                 
         
-        
-
+        scen_file_name = os.path.splitext(arg3)[0]+ ".scen"  
 
         #Creating the new scen file
-        scen_file_name = Path(arg3).stem + ".scen"   
+        
         with open(scen_file_name, 'w') as scen_file:
             scen_file.write("version 1\n")
             with open(arg2, 'r') as plan_file:
@@ -80,8 +81,7 @@ def main(arg0, arg1, arg2, arg3, arg4):
                                     agent_movement[1] += 1 
                     all_movements.append(agent_movement)
                     agent_movement = [0,0]
-                
-                print(all_movements)
+                print(scen_file_name)
                 for line in all_lines_instance:
                     if(("robot" in line) and ("value" in line) and ("at" in line) and ("init" in line)):
                         goal_loc = [int(line[32]) + all_movements[currentAgent][0] - 1, int(line[34]) + all_movements[currentAgent][1] - 1]
@@ -91,9 +91,10 @@ def main(arg0, arg1, arg2, arg3, arg4):
                         #line[32],line[34] has the coordinates of the robot when the plan was saved, need to subtract 1 in order to convert it to solver coordinates 
                         scen_file.write(str(currentAgent) + "\t" + arg3 + "\t" + str(x_dim)+ "\t"+str(y_dim) + "\t" + str(start_loc[0]) + "\t" + str(start_loc[1]) + "\t" + str(goal_loc[0]) + "\t" + str(goal_loc[1]) + "\t"+(str(abs(distance)))+"\n")
                         currentAgent += 1
+                return scen_file_name
 if __name__ =="__main__":
     if len(sys.argv) == 5:
-        main(sys.argv[0],sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4])
+        main()
     else:
         print("Incorrect number of arguments. Enter in the following format:\n python create-scen.py instance-name.txt plan-name.txt map-name.map 2")
     
