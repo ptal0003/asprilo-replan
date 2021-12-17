@@ -13,6 +13,7 @@ from .configuration import *
 from lazycbs import init
 from .createscen import *
 from .planconverter import *
+import re
 VERSION = '0.2.4'
 
 class VisualizerWindow(QMainWindow):
@@ -426,10 +427,12 @@ class VisualizerWindow(QMainWindow):
 
     def load_instance(self):
         file_name = self._file_dialog.selectedFiles()[0]
+        self._model.add_instance_file(file_name)
         return self._asp_parser.load_instance(file_name)
 
     def load_answer(self):
         file_name = self._file_dialog.selectedFiles()[0]
+        self._model.add_plan_file(file_name)
         return self._asp_parser.parse_file(file_name,
                         clear = False, clear_actions = True)
 
@@ -442,18 +445,49 @@ class VisualizerWindow(QMainWindow):
         self._model.save_answer_to_file(file_name)
 
     def replan(self):
+        #A file is chosen, .map.ecbs format
         file_name = self._file_dialog.selectedFiles()[0]
-        map_file_name = os.path.splitext(file_name)[0] 
+        #Retrieving the map file name, .map extension
+        map_file_name = os.path.splitext(file_name)[0]
+        #Generating instance file name 
         instance_file_name = os.path.splitext(file_name)[0] +"-instance"+ ".txt"
+        #Generating plan file name
         plan_file_name = os.path.splitext(file_name)[0] +"-plan"+ ".txt"
+
         self._model.save_to_file(instance_file_name) 
         self._model.save_pending_answer_to_file(plan_file_name)
         scene_file_name = convert(instance_file_name, plan_file_name, map_file_name,2)
-        temp=init(map_file_name+".ecbs", scene_file_name, 2, [(0, ((-1, -2), (-1, -2)), -2, -100)])
+        current_plan_file_name = self._model.get_last_plan_file()
+        new_cost = 0
+        with open(plan_file_name, "r") as plan_file_reader:
+            all_lines = plan_file_reader.readlines()
+            for line in all_lines:
+                if "move" in line:
+                    new_cost += 1
+        all_constraints = []
+        with open(current_plan_file_name,"r") as current_plan_file_reader:
+            all_lines = current_plan_file_reader.readlines()
+            for line in all_lines:
+                if "Constraints:" in line:
+                    line = line.split()
+                    line.pop(0)
+                    if(len(line) > 0):
+                        print(line)
+                        for i in range(len(line)):
+                            individual_constraint = line[i]
+                            individual_constraint = individual_constraint.replace('(','')
+                            individual_constraint = individual_constraint.replace(')','')
+                            individual_constraint = individual_constraint.split(",")
+                            #individual_constraint.append(re.sub(r'[\[\]\(\), ]', '', line[i]))
+                            print(individual_constraint)
+                            constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
+                            all_constraints.append(constraint_tuple)
+        temp=init(map_file_name+".ecbs", scene_file_name, 2, all_constraints)
         solution_file_name = os.path.splitext(file_name)[0] + "-solution.txt"
         with open(solution_file_name, "w") as backend_solution:
             backend_solution.write(temp)
         new_plan_file_name = convert_solution_to_plan(map_file_name+".ecbs", solution_file_name, 2)
+        
         return self._asp_parser.parse_file(new_plan_file_name,
                         clear = False, clear_actions = True)
         

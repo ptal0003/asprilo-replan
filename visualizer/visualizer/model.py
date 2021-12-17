@@ -6,7 +6,7 @@ class Model(object):
     def __init__(self):
         self._windows = []
         self._sockets = []
-
+        
         self._items = {}
         self._graphic_items = {}
         self._new_items = {}
@@ -17,9 +17,10 @@ class Model(object):
         self._blocked_nodes = [(1,1)]   #pairs of x and y
         self._highways = []             #pairs of x and y
         self._node_ids = {}
-
+        self.instance_files_loaded = []
+        self.plan_files_loaded = []
         self._inits = []                #list of unhandled inits
-
+        self.agent_count = 0
         self._num_steps = 0
         self._current_step = 0
         self._displayed_steps = -1
@@ -34,12 +35,14 @@ class Model(object):
         self._graphic_items = {}
         self._new_items = {}
         self._editable = True
-
+        self.agent_count = 0
         self._grid_size = (1, 1)
         self._nodes = []                #pairs of x and y
         self._blocked_nodes = [(1,1)]   #pairs of x and y
         self._highways = []             #pairs of x and y
-
+        self.instance_files_loaded = []
+        self.plan_files_loaded = []
+        
         self._inits = []                #list of unhandled inits
         self._num_steps = 0
         self._current_step = 0
@@ -47,6 +50,14 @@ class Model(object):
 
         self.update_windows()
 
+    def add_instance_file(self, file_name):
+        self.instance_files_loaded.append(file_name)
+    def add_plan_file(self, file_name):
+        self.plan_files_loaded.append(file_name)
+    def get_last_plan_file(self):
+        return self.plan_files_loaded[-1]
+    def get_last_instance_file(self):
+        return self.instance_files_loaded[-1]
     def _add_item2(self, item):
         if item is None:
             return
@@ -68,6 +79,7 @@ class Model(object):
             return self._add_item2(item)
         if item is None:
             return
+        print(item.get_kind_name())
         key = (item.get_kind_name(), str(item.get_id()))
         if key in self._new_items:
             return

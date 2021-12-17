@@ -31,13 +31,19 @@ def convert_solution_to_plan(arg1, arg2, arg3):
     x_max -= 2
     node_counter = 0
     highway_counter = 0
-    compatible_plan_path = os.path.splitext(arg1)[0] + "-compatible-plan.txt"
+    compatible_plan_path = os.path.splitext(arg2)[0] + "converted-compatible-plan.txt"
     #Opening the compatible map file for writing, writing the layout(instance details) into asprilo compatible format
     with open(compatible_plan_path, 'w') as asprilo_plan:
         with open(arg2, 'r') as lazycbs_plan_file:
             all_lines_constraint_extraction = lazycbs_plan_file.readlines()
             if(len(all_lines_constraint_extraction) > int(num_agents)):
-                asprilo_plan.write("%" + str(all_lines_constraint_extraction[int(num_agents)])+ "\n")
+                all_lines_constraint_extraction_split = all_lines_constraint_extraction[int(num_agents)].split()
+
+                for line in all_lines_constraint_extraction_split:
+                    if "Constraints:" in line:
+                        line = line.split()
+                        if(len(line) >= 2):
+                            print("There are constraints to be taken care of in the generated solution")
             for y in range(0, y_max):
                 for x in range(0, x_max):
                     node_counter += 1    
