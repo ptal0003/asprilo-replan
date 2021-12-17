@@ -84,8 +84,8 @@ def convert(arg1, arg2, arg3, arg4):
                 print(scen_file_name)
                 for line in all_lines_instance:
                     if(("robot" in line) and ("value" in line) and ("at" in line) and ("init" in line)):
-                        goal_loc = [int(line[32]) + all_movements[currentAgent][0] - 1, int(line[34]) + all_movements[currentAgent][1] - 1]
-                        start_loc = [int(line[32]), int(line[34])]
+                        start_loc = [int(line[32]) -1, int(line[34]) - 1]
+                        goal_loc = [start_loc[0] + all_movements[currentAgent][0],start_loc[1] + all_movements[currentAgent][1]]
                         print(start_loc)
                         distance = abs(goal_loc[0] - start_loc[0]) + abs(goal_loc[1] - start_loc[1])
                         #line[32],line[34] has the coordinates of the robot when the plan was saved, need to subtract 1 in order to convert it to solver coordinates 

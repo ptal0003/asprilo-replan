@@ -12,6 +12,7 @@ from .gui import *
 from .configuration import *
 from lazycbs import init
 from .createscen import *
+from .planconverter import *
 VERSION = '0.2.4'
 
 class VisualizerWindow(QMainWindow):
@@ -442,14 +443,19 @@ class VisualizerWindow(QMainWindow):
 
     def replan(self):
         file_name = self._file_dialog.selectedFiles()[0]
-        map_file_name = os.path.splitext(file_name)[0] + ".ecbs"
+        map_file_name = os.path.splitext(file_name)[0] 
         instance_file_name = os.path.splitext(file_name)[0] +"-instance"+ ".txt"
         plan_file_name = os.path.splitext(file_name)[0] +"-plan"+ ".txt"
         self._model.save_to_file(instance_file_name) 
         self._model.save_pending_answer_to_file(plan_file_name)
         scene_file_name = convert(instance_file_name, plan_file_name, map_file_name,2)
-        print(map_file_name, scene_file_name)
-        temp=init(map_file_name, scene_file_name, 2, [(0, ((-1, -2), (-1, -2)), -2, -100)])
+        temp=init(map_file_name+".ecbs", scene_file_name, 2, [(0, ((-1, -2), (-1, -2)), -2, -100)])
+        solution_file_name = os.path.splitext(file_name)[0] + "-solution.txt"
+        with open(solution_file_name, "w") as backend_solution:
+            backend_solution.write(temp)
+        new_plan_file_name = convert_solution_to_plan(map_file_name+".ecbs", solution_file_name, 2)
+        return self._asp_parser.parse_file(new_plan_file_name,
+                        clear = False, clear_actions = True)
         
     def create_all_pictures(self):
         directory = str(QFileDialog.getExistingDirectory(self, 'Select directory'))
