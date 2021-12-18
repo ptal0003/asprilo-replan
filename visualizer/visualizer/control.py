@@ -231,9 +231,7 @@ class VisualizerWindow(QMainWindow):
         action = QAction('Replan', self)
         action.setShortcut('Ctrl+R+P')
         action.setStatusTip('Replans from the current location')
-        action.triggered.connect(lambda: 
-                        (self.open_file_dialog(QFileDialog.AcceptOpen, 
-                         self.replan)))             
+        action.triggered.connect(lambda: self.replan())             
         menu_file.addAction(action)
         self.addAction(action)
 
@@ -433,6 +431,12 @@ class VisualizerWindow(QMainWindow):
     def load_answer(self):
         file_name = self._file_dialog.selectedFiles()[0]
         self._model.add_plan_file(file_name)
+        with open(file_name, "r") as instance_file:
+            all_lines = instance_file.readlines()
+            if "%Map:" in all_lines[0]:
+                map_path = all_lines[0].split()[1]
+                self._model._map_path = map_path
+                
         return self._asp_parser.parse_file(file_name,
                         clear = False, clear_actions = True)
 
@@ -446,13 +450,15 @@ class VisualizerWindow(QMainWindow):
 
     def replan(self):
         #A file is chosen, .map.ecbs format
-        file_name = self._file_dialog.selectedFiles()[0]
+        #file_name = self._file_dialog.selectedFiles()[0]
         #Retrieving the map file name, .map extension
-        map_file_name = os.path.splitext(file_name)[0]
+        #map_file_name = os.path.splitext(file_name)[0]
+        
+        map_file_name = os.path.splitext(self._model._map_path)[0]
         #Generating instance file name 
-        instance_file_name = os.path.splitext(file_name)[0] +"-instance"+ ".txt"
+        instance_file_name = os.path.splitext(self._model._map_path)[0] +"-instance"+ ".txt"
         #Generating plan file name
-        plan_file_name = os.path.splitext(file_name)[0] +"-plan"+ ".txt"
+        plan_file_name = os.path.splitext(self._model._map_path)[0] +"-plan"+ ".txt"
 
         self._model.save_to_file(instance_file_name) 
         self._model.save_pending_answer_to_file(plan_file_name)
@@ -483,10 +489,10 @@ class VisualizerWindow(QMainWindow):
                             constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
                             all_constraints.append(constraint_tuple)
         temp=init(map_file_name+".ecbs", scene_file_name, 2, all_constraints)
-        solution_file_name = os.path.splitext(file_name)[0] + "-solution.txt"
+        solution_file_name = os.path.splitext(current_plan_file_name)[0] + "-solution.txt"
         with open(solution_file_name, "w") as backend_solution:
             backend_solution.write(temp)
-        new_plan_file_name = convert_solution_to_plan(map_file_name+".ecbs", solution_file_name, 2)
+        new_plan_file_name = convert_solution_to_plan(solution_file_name, 2)
         
         return self._asp_parser.parse_file(new_plan_file_name,
                         clear = False, clear_actions = True)

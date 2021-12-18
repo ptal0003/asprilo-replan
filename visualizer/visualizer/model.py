@@ -6,12 +6,12 @@ class Model(object):
     def __init__(self):
         self._windows = []
         self._sockets = []
-        
+        self._map_path = ""
         self._items = {}
         self._graphic_items = {}
         self._new_items = {}
         self._editable = True
-
+        
         self._grid_size = (1, 1)
         self._nodes = []                #pairs of x and y
         self._blocked_nodes = [(1,1)]   #pairs of x and y
@@ -32,6 +32,7 @@ class Model(object):
             if isinstance(window, ModelView):
                 window.clear()
         self._items = {}
+        self._map_path = ""
         self._graphic_items = {}
         self._new_items = {}
         self._editable = True
