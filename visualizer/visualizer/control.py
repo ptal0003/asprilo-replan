@@ -439,7 +439,16 @@ class VisualizerWindow(QMainWindow):
                 
         return self._asp_parser.parse_file(file_name,
                         clear = False, clear_actions = True)
-
+    def load_answer_from_provided_file(self, file_name):
+        self._model.add_plan_file(file_name)
+        with open(file_name, "r") as instance_file:
+            all_lines = instance_file.readlines()
+            if "%Map:" in all_lines[0]:
+                map_path = all_lines[0].split()[1]
+                self._model._map_path = map_path
+                
+        return self._asp_parser.parse_file(file_name,
+                        clear = False, clear_actions = False)
     def save_instance(self):
         file_name = self._file_dialog.selectedFiles()[0]
         self._model.save_to_file(file_name)
@@ -456,9 +465,9 @@ class VisualizerWindow(QMainWindow):
         
         map_file_name = os.path.splitext(self._model._map_path)[0]
         #Generating instance file name 
-        instance_file_name = os.path.splitext(self._model._map_path)[0] +"-instance"+ ".txt"
+        instance_file_name = os.path.splitext(self._model.get_last_plan_file())[0] +"-instance"+ ".txt"
         #Generating plan file name
-        plan_file_name = os.path.splitext(self._model._map_path)[0] +"-plan"+ ".txt"
+        plan_file_name = os.path.splitext(self._model.get_last_plan_file())[0] +"-plan"+ ".txt"
 
         self._model.save_to_file(instance_file_name) 
         self._model.save_pending_answer_to_file(plan_file_name)
@@ -493,10 +502,26 @@ class VisualizerWindow(QMainWindow):
         with open(solution_file_name, "w") as backend_solution:
             backend_solution.write(temp)
         new_plan_file_name = convert_solution_to_plan(solution_file_name, 2)
-        
-        return self._asp_parser.parse_file(new_plan_file_name,
-                        clear = False, clear_actions = True)
-        
+        lines = []
+        with open(current_plan_file_name,"r") as current_plan_reader:
+            lines = current_plan_reader.readlines()
+        with open(current_plan_file_name,"w") as current_plan_writer:
+            for line in lines:
+                if "highway" in line or "node" in line or "%" in line:
+                        current_plan_writer.write(line)
+                if "occurs" in line and "move" in line:
+                        result = [int(d) for d in re.findall(r'-?\d+', line)]
+                        if(result[len(result) - 1] < self._model.get_current_step()):
+                            current_plan_writer.write(line)
+            with open(new_plan_file_name,"r") as new_plan_reader:
+                all_lines = new_plan_reader.readlines()
+                for line in all_lines:
+                    if "occurs" in line and "move" in line and "robot" in line:
+                        line_split = re.split("\(|\,|\)",line)
+                        line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + self._model.get_current_step())+").\n"
+                        print(line_final)
+                        current_plan_writer.write(line_final)
+        return self.load_answer_from_provided_file(current_plan_file_name)
     def create_all_pictures(self):
         directory = str(QFileDialog.getExistingDirectory(self, 'Select directory'))
         if directory is None or len(directory) == 0: 

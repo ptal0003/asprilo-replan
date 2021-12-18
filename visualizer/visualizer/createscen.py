@@ -27,7 +27,7 @@ def convert(arg1, arg2, arg3, arg4):
                 time_step = int(split_line.pop())
                 
         
-        scen_file_name = os.path.splitext(arg3)[0]+ ".scen"  
+        scen_file_name = os.path.splitext(arg1)[0]+ ".scen"  
 
         #Creating the new scen file
         
@@ -81,12 +81,10 @@ def convert(arg1, arg2, arg3, arg4):
                                     agent_movement[1] += 1 
                     all_movements.append(agent_movement)
                     agent_movement = [0,0]
-                print(scen_file_name)
                 for line in all_lines_instance:
                     if(("robot" in line) and ("value" in line) and ("at" in line) and ("init" in line)):
                         start_loc = [int(line[32]) -1, int(line[34]) - 1]
                         goal_loc = [start_loc[0] + all_movements[currentAgent][0],start_loc[1] + all_movements[currentAgent][1]]
-                        print(start_loc)
                         distance = abs(goal_loc[0] - start_loc[0]) + abs(goal_loc[1] - start_loc[1])
                         #line[32],line[34] has the coordinates of the robot when the plan was saved, need to subtract 1 in order to convert it to solver coordinates 
                         scen_file.write(str(currentAgent) + "\t" + arg3 + "\t" + str(x_dim)+ "\t"+str(y_dim) + "\t" + str(start_loc[0]) + "\t" + str(start_loc[1]) + "\t" + str(goal_loc[0]) + "\t" + str(goal_loc[1]) + "\t"+(str(abs(distance)))+"\n")

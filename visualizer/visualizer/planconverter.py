@@ -17,9 +17,8 @@ def convert_solution_to_plan(arg1, arg2):
     with open(arg1,'r') as incompatible_solution_reader:
         lines = incompatible_solution_reader.readlines()
         lines[0] = lines[0].split()
-        print(lines[0])
         map_file_name = lines[0][1]
-        compatible_plan_path = os.path.splitext(map_file_name)[0] + "-compatible-plan.txt"
+        compatible_plan_path = os.path.splitext(arg1)[0] + "-compatible-plan.txt"
     
     
     with open(map_file_name, 'r') as map_file:
@@ -33,9 +32,7 @@ def convert_solution_to_plan(arg1, arg2):
             all_lines[y] = all_lines[y].split(",")
     for i in range(0, x_max):
         for j in range(0,y_max):
-            if (i ==0 or i == x_max -1) or (j ==0 or j == y_max -1):
-                print("Border")
-            else:
+            if not((i ==0 or i == x_max -1) or (j ==0 or j == y_max -1)):
                 all_lines_cleaned[i-1][j-1] = all_lines[i][j]
     all_lines = all_lines_cleaned
     y_max -= 2
@@ -73,7 +70,6 @@ def convert_solution_to_plan(arg1, arg2):
             #Opening the incompatible plan file to extract information about the robot         
             all_lines = all_lines_constraint_extraction
             all_lines.remove(all_lines[0])
-            print(all_lines)
             time_limit = 100
             all_paths = [[0 for x in range(time_limit)] for y in range(int(num_agents))]  
             all_movements = []   
