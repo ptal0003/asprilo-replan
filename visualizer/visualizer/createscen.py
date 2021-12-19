@@ -12,9 +12,10 @@ def convert(arg1, arg2, arg3, arg4):
     x_dim = 0
     y_dim = 0
     time_step = 0
-    
+    #Opening the instance file with the remaining plan
     with open(arg1, 'r') as instance_file:
         all_lines = instance_file.readlines()
+        #Extracting Grid Size, current time step from the plan remaining plan
         for line in all_lines:
             if "Grid size X:" in line:
                 split_line = line.split()
@@ -25,28 +26,31 @@ def convert(arg1, arg2, arg3, arg4):
             elif "Time Step" in line:
                 split_line = line.split()
                 time_step = int(split_line.pop())
-                
-        
+        #Setting the new scenario file name
         scen_file_name = os.path.splitext(arg1)[0]+ ".scen"  
 
         #Creating the new scen file
         
         with open(scen_file_name, 'w') as scen_file:
             scen_file.write("version 1\n")
+            #Opening the plan file with the remaining plan
             with open(arg2, 'r') as plan_file:
                 all_lines_instance = all_lines
                 all_lines_plan = plan_file.readlines()
                 all_movements = []
+                #All movements in asprilo are of broken down into steps, this variable will store the difference in x and y between final and initial plan
                 agent_movement = [0,0]
                 past_plan_movements = []
-                
+                #Reading through plans for all agents
                 for i in range(len(all_lines_plan)):
+                    #Getting the line and checking if the movement in the current line is for a later time step or the current time step.
                     line = all_lines_plan[i]
                     line = line.split()
                     line[-1] = line[-1][:-2]
                     if(int(line[-1]) < time_step):
                         past_plan_movements.append(i)
                 past_plan_movements.reverse()
+                #Removing the past movements
                 for index in past_plan_movements:    
                     del all_lines_plan[index]    
                 #Retrieving the total change in robot's location to reach the final location, adding sum_movement to current location would give the target location to be fed into the scen file
@@ -79,8 +83,10 @@ def convert(arg1, arg2, arg3, arg4):
                                     agent_movement[1] += 0
                                 else:
                                     agent_movement[1] += 1 
+                    #all_movements has the sum of x and y movements for all the agents, agent_movement is the sum of movements for x
                     all_movements.append(agent_movement)
                     agent_movement = [0,0]
+                #Writing in the new scen file with updated positions.
                 for line in all_lines_instance:
                     if(("robot" in line) and ("value" in line) and ("at" in line) and ("init" in line)):
                         start_loc = [int(line[32]) -1, int(line[34]) - 1]
