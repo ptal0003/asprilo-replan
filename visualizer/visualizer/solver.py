@@ -409,35 +409,39 @@ class Solverlazycbs(Solver):
         #     for atom in data:
         #         f.write(atom + '.\n')
         viz_instance2solve = []
-        for atom in data:
-            if(atom == data[-1]):
-               self.grid_size = atom.replace('\n','')
+        print(data)
+        for line in data:
+            if("Time Step and Grid Size:" in line):
+               print("Grid Size Found")
+               line = line.replace('\n','')
+               line_split = line.split("\t")
+               self.grid_size = line_split
+               
             else:
-                viz_instance2solve.append(atom + '.\n')
+                viz_instance2solve.append(line + '.\n')
+        
         if not path.exists("../temp"):
             os.mkdir("../temp")
-        w = int(self.grid_size.split(',')[0])+2
-        h = int(self.grid_size.split(',')[1])+2
+        time_step = self.grid_size[1]
+        w = int(self.grid_size[2])+2
+        h = int(self.grid_size[3])+2
         arr = [[1 for x in range(w)] for y in range(h)] 
-        print(arr)
-        print("after")
-        for atom in data:
-            if "init" in atom and "highway" in atom:
-                atom = atom.replace("(",",")
-                atom = atom.replace(")",",")
-                atom = atom.split(',')
-                atom[-5] = atom[-5].replace(" ", "")
-                atom[-4] = atom[-4].replace(" ", "")
-                x_coord = int(atom[-5])
-                y_coord = int(atom[-4])
+        for line in data:
+            if "init" in line and "highway" in line:
+                line = line.replace("(",",")
+                line = line.replace(")",",")
+                line = line.split(',')
+                line[-5] = line[-5].replace(" ", "")
+                line[-4] = line[-4].replace(" ", "")
+                x_coord = int(line[-5])
+                y_coord = int(line[-4])
                 arr[x_coord][y_coord] = 0
         with open("../temp/map.ecbs",'w') as f:
             for i in range(h):
                 for j in range(w):
-                    print(arr[j][i])
                     f.write(str(arr[j][i]))
                 f.write("\n")
-
+        print(time_step)
     def solve(self):
         pass
 
@@ -458,7 +462,6 @@ def main():
     
     elif mode == 'lazycbs':
         solver = Solverlazycbs()
-        print("Great Success")
     solver.run()
 
 if __name__ == "__main__":

@@ -189,16 +189,19 @@ class SolverSocket(VisualizerSocket):
         if self._s == None or self._model == None: return -1
         self._s.send('%$RESET.'.encode('utf-8'))
         self._model.set_editable(False)
+        time_step_str = "%Time Step and Grid Size:\t" + str(self._model.get_current_step()) + "\t" + str(self._model.get_grid_size()[0]) + "\t" + str(self._model.get_grid_size()[1])
+        
         self._model.restart()
+        #self._s.send(time_step_str.encode('utf-8'))
         for atom in self._model.to_init_str():        #send instance
             atom = atom.replace('\n', '')
             self._s.send(str(atom).encode('utf-8'))
         
-        for action in self._model.to_actions_str():        #send instance
+        for action in self._model.to_actions_str():        #send actions
             action = action.replace('\n', '')
             self._s.send(str(action).encode('utf-8'))
-        grid_size = str(self._model.get_grid_size()[0])+ ","+ str(self._model.get_grid_size()[1])
-        self._s.send(str(grid_size).encode('utf-8'))
+        print(self._model)
+        self._s.send(str(time_step_str).encode('utf-8'))
         self._s.send('\n'.encode('utf-8'))
         self.run_connection()
 
