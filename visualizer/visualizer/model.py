@@ -474,7 +474,14 @@ class Model(object):
         for init in self._inits:
             s.append(str(init))
         return s
-
+    def to_actions_str(self):
+        s = []
+        for items_dic in self._graphic_items.values():
+                for item in items_dic.values():
+                    for action in item.to_occurs_str():
+                        if action is not None:
+                            s.append(action)
+        return s
     def save_to_file(self, file_name):
         ofile = open(file_name, 'w')
         try:

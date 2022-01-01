@@ -13,7 +13,9 @@ from .configuration import *
 from lazycbs import init
 from .createscen import *
 from .planconverter import *
+from .solver import *
 import re
+
 VERSION = '0.2.4'
 
 class VisualizerWindow(QMainWindow):
@@ -265,6 +267,12 @@ class VisualizerWindow(QMainWindow):
         menu_solver.addAction(action)
         self.addAction(action)
 
+        action = QAction('Solve with custom solver', self)
+        action.setStatusTip('Use any solver similar to lazycbs')
+        action.triggered.connect((lambda: testing()))
+        menu_solver.addAction(action)
+        self.addAction(action)
+
         action = QAction('Fast Solve', self)
         action.setShortcut('Ctrl+S')
         action.setStatusTip('Connect the visualizer to a solver and start solving')
@@ -448,7 +456,7 @@ class VisualizerWindow(QMainWindow):
                 self._model._map_path = map_path
                 
         return self._asp_parser.parse_file(file_name,
-                        clear = False, clear_actions = True)
+                        clear = True, clear_actions = False, clear_grounder=False)
     def save_instance(self):
         file_name = self._file_dialog.selectedFiles()[0]
         self._model.save_to_file(file_name)
@@ -537,6 +545,7 @@ class VisualizerWindow(QMainWindow):
                 self.create_pictures_in_directory(full_file_name)
 
     def show_server_dialog(self, dialog, server_socket):
+        print(server_socket.script_is_running())
         if server_socket.script_is_running():
             dialog.set_address(server_socket.get_host(), server_socket.get_port())
         dialog.show()

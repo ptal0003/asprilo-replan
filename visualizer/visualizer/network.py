@@ -26,6 +26,7 @@ class VisualizerSocket(object):
         self._parser = parser
 
     def run_script(self, command, port = None):
+        print("Line29")
         self.close()
         self._thread = Thread(target = lambda: os.system(command))
         self._thread.start()
@@ -33,20 +34,25 @@ class VisualizerSocket(object):
             self.connect('127.0.0.1', port)
 
     def join(self, wait_time):
+        print("Line37")
         if self._thread is not None:
             self._thread.join(wait_time)
             self._thread = None
 
     def run_connection(self):
+        print("Line43")
         if self._s is None:
             return
         if self._timer is not None:
             self._timer.stop()
         self._timer = QTimer()
+        
         self._timer.timeout.connect(self.receive)
+        print("Running connection")
         self._timer.start(1000)
 
     def connect(self, host = None, port = None):
+        print("Line55") 
         if self.is_connected() and host == self._host and port == self._port:
             return 0
         if host is not None:
@@ -75,6 +81,7 @@ class VisualizerSocket(object):
         return 0
 
     def send(self, msg):
+        print("line 85")
         if self._s is None or msg is None:
             return
         if msg == '':
@@ -83,6 +90,7 @@ class VisualizerSocket(object):
         pass
 
     def done_step(self, step):
+        print("Line93") 
         if self._s is None:
             return
         self._waiting = True
@@ -92,6 +100,7 @@ class VisualizerSocket(object):
         pass
 
     def _receive_data(self):
+        print("Line103") 
         breakLoop = False                                  
         data = ''
         try:
@@ -176,6 +185,7 @@ class SolverSocket(VisualizerSocket):
         self._model.update_windows()
 
     def solve(self):
+        print("line188")
         if self._s == None or self._model == None: return -1
         self._s.send('%$RESET.'.encode('utf-8'))
         self._model.set_editable(False)
@@ -183,6 +193,12 @@ class SolverSocket(VisualizerSocket):
         for atom in self._model.to_init_str():        #send instance
             atom = atom.replace('\n', '')
             self._s.send(str(atom).encode('utf-8'))
+        
+        for action in self._model.to_actions_str():        #send instance
+            action = action.replace('\n', '')
+            self._s.send(str(action).encode('utf-8'))
+        grid_size = str(self._model.get_grid_size()[0])+ ","+ str(self._model.get_grid_size()[1])
+        self._s.send(str(grid_size).encode('utf-8'))
         self._s.send('\n'.encode('utf-8'))
         self.run_connection()
 

@@ -575,7 +575,7 @@ class InitServerDialog(QWidget):
         self.hide()
         try:
             self._socket.run_script(
-                    self._textbox.text().replace('__dir__', os.path.dirname(sys.argv[0])),
+                    self._textbox.text().replace('__dir__', os.getcwd()),
                     int(self._port_textbox.text()))
         except(ValueError):
             print('the port must be an integer value')

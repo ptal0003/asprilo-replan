@@ -9,15 +9,16 @@ import argparse
 import select
 import socket
 import time
-
+from lazycbs import init
 from clingo.control import Control
 from clingo.symbol import Function, parse_term
-
+import os
+import re
+from os import path
 VERSION = '0.2.2'
 #default one shot solver
 class Solver(object):
     def __init__(self):
-        print("SOLVER CONSTRUCTOR")
         self._parser = argparse.ArgumentParser()
         self._parser.add_argument('-p', '--port', help='the port the solver will send the anwsers to',
                             type=int, default = 5000)
@@ -29,7 +30,7 @@ class Solver(object):
                             type = str, default = './encoding.lp')
         self._parser.add_argument('-m', '--mode',
                             help='the mode that the solver should use to solve instances',
-                            type = str, choices=['default', 'incremental', 'interactive', 'online'], default = 'default')
+                            type = str, choices=['default', 'incremental', 'interactive', 'online', 'lazycbs'], default = 'default')
         self._parser.add_argument('-t', '--timeout',
                             help='The maximal number of seconds the solver waits for a solution. 0 means no limit.',
                             type = int, default = 0)
@@ -104,7 +105,6 @@ class Solver(object):
 
     #close the connection and the socket
     def close(self):
-        print("CLOSE")
         if self._connection is not None:
             try:
                 self._connection.shutdown(socket.SHUT_RDWR)
@@ -135,14 +135,12 @@ class Solver(object):
 
     #sends data to the visualizer
     def send(self, data):
-        print("SEND")
         if self._connection is None:
             return
         self._connection.send(data.encode())
 
     #receive data from the visualizer
     def receive(self, time_out):
-        print("RECEIVE")
         if self._connection is None:
             return -1
         try:
@@ -172,7 +170,6 @@ class Solver(object):
     #process the raw data received by the receive function
     #primally splits data in seperate control symbols and asp atoms
     def on_raw_data(self, raw_data):
-        print("ON RAW DATA")
         #the visualizer seperates every atom and control symbol with the '.' character
         data = raw_data.split('.')
         for atom in data:
@@ -193,7 +190,6 @@ class Solver(object):
 
     #process received control symbols
     def on_control_symbol(self, symbol):
-        print("ON CONTROL SYMBOL")
         if symbol.name == 'reset':
             #resets the solver to receive a new instance and discard old data
             #the visualizer will send this symbol when it is sending a new instance afterwards
@@ -235,7 +231,6 @@ class Solver(object):
 
     #solve the instance
     def solve(self):
-        print("SOLVE")
         #loads the given encoding and ground
         self._control.load(self._args.encoding)
 
@@ -252,12 +247,11 @@ class Solver(object):
                 return solve_future.get()
             #check timeout
             elif self._args.timeout > 0 and (time.time() - self._solve_start) > self._args.timeout:
-                print('solver timeout after ' , time.time() - self._solve_start, 'secounds')
+                print('solver timeout after ' , time.time() - self._solve_start, 'seconds')
                 return solve_future.get()
 
     #model callback for self._control.solve in self.solve
     def on_model(self, model):
-        print("ON MODEL")
         print('found solution')
         #add empty entry to dictonary
         self._to_send[0] = []
@@ -277,11 +271,11 @@ class Solver(object):
                 if self._args.occurs:
                     print(atom)
                 self._to_send[0].append(atom)
+        print(self._to_send[0])
         return True
 
     #solver main function
     def run(self):
-        print("RUN")
         print('Start ' + self._name)
         self.connect()
         #loop to receive data
@@ -403,6 +397,50 @@ class SolverInt(SolverInc):
                 self._to_send[step].append(atom)
         return True
 
+class Solverlazycbs(Solver):
+    def __init__(self):
+        super(Solverlazycbs, self).__init__()
+        self.grid_size = ""
+
+    # handels the asp atoms
+    def on_data(self, data):
+        # # create asp file to translate
+        # with open('viz_instance2solve.lp', 'w') as f:
+        #     for atom in data:
+        #         f.write(atom + '.\n')
+        viz_instance2solve = []
+        for atom in data:
+            if(atom == data[-1]):
+               self.grid_size = atom.replace('\n','')
+            else:
+                viz_instance2solve.append(atom + '.\n')
+        if not path.exists("../temp"):
+            os.mkdir("../temp")
+        w = int(self.grid_size.split(',')[0])+2
+        h = int(self.grid_size.split(',')[1])+2
+        arr = [[1 for x in range(w)] for y in range(h)] 
+        print(arr)
+        print("after")
+        for atom in data:
+            if "init" in atom and "highway" in atom:
+                atom = atom.replace("(",",")
+                atom = atom.replace(")",",")
+                atom = atom.split(',')
+                atom[-5] = atom[-5].replace(" ", "")
+                atom[-4] = atom[-4].replace(" ", "")
+                x_coord = int(atom[-5])
+                y_coord = int(atom[-4])
+                arr[x_coord][y_coord] = 0
+        with open("../temp/map.ecbs",'w') as f:
+            for i in range(h):
+                for j in range(w):
+                    print(arr[j][i])
+                    f.write(str(arr[j][i]))
+                f.write("\n")
+
+    def solve(self):
+        pass
+
 #main
 def main():
     print("MAIN")
@@ -417,7 +455,12 @@ def main():
         solver = SolverInt()
     elif mode == 'online':
         solver = SolverInt()
+    
+    elif mode == 'lazycbs':
+        solver = Solverlazycbs()
+        print("Great Success")
     solver.run()
 
 if __name__ == "__main__":
     main()
+
