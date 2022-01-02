@@ -13,7 +13,9 @@ from lazycbs import init
 from clingo.control import Control
 from clingo.symbol import Function, parse_term
 import os
-import re
+from lazycbs import init
+from .createscen import *
+from .planconverter import *
 from os import path
 VERSION = '0.2.2'
 #default one shot solver
@@ -401,7 +403,7 @@ class Solverlazycbs(Solver):
     def __init__(self):
         super(Solverlazycbs, self).__init__()
         self.grid_size = ""
-
+        self.time_step = 0
     # handels the asp atoms
     def on_data(self, data):
         # # create asp file to translate
@@ -422,7 +424,7 @@ class Solverlazycbs(Solver):
         
         if not path.exists("../temp"):
             os.mkdir("../temp")
-        time_step = self.grid_size[1]
+        self.time_step = self.grid_size[1]
         w = int(self.grid_size[2])+2
         h = int(self.grid_size[3])+2
         arr = [[1 for x in range(w)] for y in range(h)] 
@@ -441,10 +443,35 @@ class Solverlazycbs(Solver):
                 for j in range(w):
                     f.write(str(arr[j][i]))
                 f.write("\n")
-        print(time_step)
+        self.solve()
+        
     def solve(self):
-        pass
-
+        map_file_name = "../temp/map.ecbs"
+        scene_file_name = convert("../temp/current-instance.lp","../temp/remaining-plan.lp",map_file_name ,2)
+        new_cost = 0
+        with open("../temp/remaining-plan.lp", "r") as plan_file_reader:
+            all_lines = plan_file_reader.readlines()
+            for line in all_lines:
+                if "move" in line:
+                    new_cost += 1
+        all_constraints = []
+        with open("../temp/remaining-plan.lp","r") as current_plan_file_reader:
+            all_lines = current_plan_file_reader.readlines()
+            for line in all_lines:
+                if "Constraints:" in line:
+                    line = line.split()
+                    line.pop(0)
+                    if(len(line) > 0):
+                        for i in range(len(line)):
+                            individual_constraint = line[i]
+                            individual_constraint = individual_constraint.replace('(','')
+                            individual_constraint = individual_constraint.replace(')','')
+                            individual_constraint = individual_constraint.split(",")
+                            #individual_constraint.append(re.sub(r'[\[\]\(\), ]', '', line[i]))
+                            constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
+                            all_constraints.append(constraint_tuple)
+        print(map_file_name,scene_file_name)
+        temp=init(map_file_name, scene_file_name, 2, all_constraints)
 #main
 def main():
     print("MAIN")
