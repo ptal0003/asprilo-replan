@@ -439,10 +439,15 @@ class Solverlazycbs(Solver):
                 y_coord = int(line[-4])
                 arr[x_coord][y_coord] = 0
         with open("../temp/map.ecbs",'w') as f:
+            f.write(str(w) + "," + str(h) + "\n")
             for i in range(h):
                 for j in range(w):
                     f.write(str(arr[j][i]))
+                    if(j < (w-1)):
+                        f.write(",")
+                        
                 f.write("\n")
+        
         self.solve()
         
     def solve(self):
@@ -471,7 +476,35 @@ class Solverlazycbs(Solver):
                             constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
                             all_constraints.append(constraint_tuple)
         print(map_file_name,scene_file_name)
-        temp=init(map_file_name, scene_file_name, 2, all_constraints)
+        temp=init("../temp/map.ecbs","../temp/current-instance.scen", 2, [])
+        solution_file_name = "../temp/solution.txt"
+        with open(solution_file_name, "w") as backend_solution:
+            backend_solution.write(temp)
+        new_plan_file_name = convert_solution_to_plan(solution_file_name, 2)
+        lines = []
+        with open("../temp/current-instance.lp","r") as current_instance_reader:
+            lines = current_instance_reader.readlines()
+
+        with open("../temp/complete-plan.lp","r") as current_plan_reader:
+            lines.append(current_plan_reader.readlines())
+        with open("../temp/complete-plan.lp","w") as current_plan_writer:
+            for line in lines:
+                if "highway" in line or "node" in line or "%" in line:
+                        current_plan_writer.write(line)
+                if "init" in line and "robot" in line:
+                        current_plan_writer.write(line)
+                if "occurs" in line and "move" in line:
+                        result = [int(d) for d in re.findall(r'-?\d+', line)]
+                        if(result[len(result) - 1] < self._model.get_current_step()):
+                            current_plan_writer.write(line)
+            with open(new_plan_file_name,"r") as new_plan_reader:
+                all_lines = new_plan_reader.readlines()
+                for line in all_lines:
+                    if "occurs" in line and "move" in line and "robot" in line:
+                        line_split = re.split("\(|\,|\)",line)
+                        line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
+                        current_plan_writer.write(line_final)
+        
 #main
 def main():
     print("MAIN")
@@ -489,6 +522,7 @@ def main():
     
     elif mode == 'lazycbs':
         solver = Solverlazycbs()
+    solver = Solverlazycbs()
     solver.run()
 
 if __name__ == "__main__":

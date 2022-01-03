@@ -192,6 +192,7 @@ class SolverSocket(VisualizerSocket):
         time_step_str = "%Time Step and Grid Size:\t" + str(self._model.get_current_step()) + "\t" + str(self._model.get_grid_size()[0]) + "\t" + str(self._model.get_grid_size()[1])
         self._model.save_to_file("../temp/current-instance.lp")
         self._model.save_pending_answer_to_file("../temp/remaining-plan.lp")
+        self._model.save_answer_to_file("../temp/complete-plan.lp")
         self._model.restart()
         #self._s.send(time_step_str.encode('utf-8'))
         for atom in self._model.to_init_str():        #send instance

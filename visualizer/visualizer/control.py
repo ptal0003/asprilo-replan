@@ -454,9 +454,9 @@ class VisualizerWindow(QMainWindow):
             if "%Map:" in all_lines[0]:
                 map_path = all_lines[0].split()[1]
                 self._model._map_path = map_path
-                
+        print("HOla")
         return self._asp_parser.parse_file(file_name,
-                        clear = True, clear_actions = False, clear_grounder=False)
+                        clear = True, clear_actions = False)
     def save_instance(self):
         file_name = self._file_dialog.selectedFiles()[0]
         self._model.save_to_file(file_name)
@@ -503,7 +503,6 @@ class VisualizerWindow(QMainWindow):
                             #individual_constraint.append(re.sub(r'[\[\]\(\), ]', '', line[i]))
                             constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
                             all_constraints.append(constraint_tuple)
-        print(map_file_name)
         temp=init(map_file_name+".ecbs", scene_file_name, 2, all_constraints)
         solution_file_name = os.path.splitext(current_plan_file_name)[0] + "-solution.txt"
         with open(solution_file_name, "w") as backend_solution:
@@ -529,7 +528,7 @@ class VisualizerWindow(QMainWindow):
                         line_split = re.split("\(|\,|\)",line)
                         line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + self._model.get_current_step())+").\n"
                         current_plan_writer.write(line_final)
-                    
+        print(temp)         
         return self.load_answer_from_provided_file(current_plan_file_name)
     def create_all_pictures(self):
         directory = str(QFileDialog.getExistingDirectory(self, 'Select directory'))
