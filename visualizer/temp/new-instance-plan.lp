@@ -1,10 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Grid size X: 6
 %Grid size Y: 6
-%Time Step: 4
+%Time Step: 3
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#program base.
-
 %init
 init(object(node, 1), value(at, (1, 1))).
 init(object(node, 2), value(at, (2, 1))).
@@ -72,9 +70,9 @@ init(object(highway, 32), value(at, (2, 6))).
 init(object(highway, 33), value(at, (3, 6))).
 init(object(highway, 34), value(at, (4, 6))).
 init(object(highway, 35), value(at, (5, 6))).
-init(object(robot,1), value(at,(3,3))).
+init(object(robot,1), value(at,(3,2))).
 init(object(robot,1), value(max_energy,0)).
 init(object(robot,1), value(energy,0)).
-init(object(robot,2), value(at,(4,4))).
+init(object(robot,2), value(at,(4,3))).
 init(object(robot,2), value(max_energy,0)).
 init(object(robot,2), value(energy,0)).

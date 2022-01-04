@@ -411,10 +411,8 @@ class Solverlazycbs(Solver):
         #     for atom in data:
         #         f.write(atom + '.\n')
         viz_instance2solve = []
-        print(data)
         for line in data:
             if("Time Step and Grid Size:" in line):
-               print("Grid Size Found")
                line = line.replace('\n','')
                line_split = line.split("\t")
                self.grid_size = line_split
@@ -424,7 +422,7 @@ class Solverlazycbs(Solver):
         
         if not path.exists("../temp"):
             os.mkdir("../temp")
-        self.time_step = self.grid_size[1]
+        self.time_step = int(self.grid_size[1])
         w = int(self.grid_size[2])+2
         h = int(self.grid_size[3])+2
         arr = [[1 for x in range(w)] for y in range(h)] 
@@ -475,27 +473,62 @@ class Solverlazycbs(Solver):
                             #individual_constraint.append(re.sub(r'[\[\]\(\), ]', '', line[i]))
                             constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
                             all_constraints.append(constraint_tuple)
-        print(map_file_name,scene_file_name)
         temp=init("../temp/map.ecbs","../temp/current-instance.scen", 2, [])
         solution_file_name = "../temp/solution.txt"
         with open(solution_file_name, "w") as backend_solution:
             backend_solution.write(temp)
         new_plan_file_name = convert_solution_to_plan(solution_file_name, 2)
         lines = []
+        past_actions = []
         with open("../temp/current-instance.lp","r") as current_instance_reader:
             lines = current_instance_reader.readlines()
 
-        with open("../temp/complete-plan.lp","r") as current_plan_reader:
-            lines.append(current_plan_reader.readlines())
-        with open("../temp/complete-plan.lp","w") as current_plan_writer:
+        
+        with open("../temp/new-plan.lp","w") as current_plan_writer:
             for line in lines:
+                agent_num = -1
+                agent_x = -1
+                agent_y = -1
+                agent_dx = 0
+                agent_dy = 0
                 if "highway" in line or "node" in line or "%" in line:
                         current_plan_writer.write(line)
-                if "init" in line and "robot" in line:
-                        current_plan_writer.write(line)
-                if "occurs" in line and "move" in line:
+                if "init" in line and "robot" in line and "at" in line:
+                        line = line.replace("(",",")
+                        line = line.replace(")",",")
+                        line = line.split(",")
+                        agent_num = int(line[3])
+                        agent_x = int(line[-5])
+                        agent_y = int(line[-4])
+                        with open("../temp/complete-plan.lp","r") as past_movement_reader:
+                            all_actions = past_movement_reader.readlines()
+                            for current_action in all_actions:
+                                current_action = current_action.replace("(",",")
+                                current_action = current_action.replace(")",",")
+                                current_action = current_action.split(",")
+                                if(agent_num == int(current_action[3])):
+                                    if int(current_action[-2]) < self.time_step:
+                                        agent_dx += int(current_action[-6])
+                                        agent_dy += int(current_action[-5])
+                            agent_x -= agent_dx
+                            agent_y -= agent_dy
+                        line_to_be_written = "init(object(robot,"+str(agent_num)+"),value(at,("+str(agent_x)+", "+str(agent_y)+"))).\n"
+                        agent_x = -1
+                        agent_y = -1
+                        agent_dx = 0
+                        agent_dy = 0
+                        current_plan_writer.write(line_to_be_written)
+            with open("../temp/complete-plan.lp","r") as current_plan_reader:
+               
+                all_plan_lines = current_plan_reader.readlines()
+
+                for line in all_plan_lines:
+                    if "move" in line:
                         result = [int(d) for d in re.findall(r'-?\d+', line)]
-                        if(result[len(result) - 1] < self._model.get_current_step()):
+                        print("Current Time Step:" + str(self.time_step))
+                        print("Action Time Step:" + str(result[len(result) - 1]))
+                        if(result[len(result) - 1] < self.time_step):
+                            print(result[len(result) - 1])
                             current_plan_writer.write(line)
             with open(new_plan_file_name,"r") as new_plan_reader:
                 all_lines = new_plan_reader.readlines()
@@ -504,7 +537,7 @@ class Solverlazycbs(Solver):
                         line_split = re.split("\(|\,|\)",line)
                         line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
                         current_plan_writer.write(line_final)
-        
+            self.send("%SOLVED")
 #main
 def main():
     print("MAIN")
@@ -522,7 +555,6 @@ def main():
     
     elif mode == 'lazycbs':
         solver = Solverlazycbs()
-    solver = Solverlazycbs()
     solver.run()
 
 if __name__ == "__main__":
