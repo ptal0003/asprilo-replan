@@ -17,6 +17,7 @@ from lazycbs import init
 from .createscen import *
 from .planconverter import *
 from os import path
+from datetime import date, datetime
 VERSION = '0.2.2'
 #default one shot solver
 class Solver(object):
@@ -75,10 +76,12 @@ class Solver(object):
         self._port = self._args.port
 
     def __del__(self):
+        print("Solver.py 78")
         self.close()
 
     #return the solver mode
     def get_mode(self):
+        print("Solver.py 83")
         return self._args.mode
 
     #open the socket and wait for an incomming connection
@@ -107,6 +110,7 @@ class Solver(object):
 
     #close the connection and the socket
     def close(self):
+        print("Solver.py 112")
         if self._connection is not None:
             try:
                 self._connection.shutdown(socket.SHUT_RDWR)
@@ -126,7 +130,7 @@ class Solver(object):
 
     #checks whether data can be read from the socket
     def is_ready_to_read(self, time_out = 0.1):
-        print("IS READY TO READ")
+        print("Solver.py 132")
         if self._connection is None:
             return False
         ready = select.select([self._connection], [], [], time_out)
@@ -137,12 +141,14 @@ class Solver(object):
 
     #sends data to the visualizer
     def send(self, data):
+        print("Solver.py 143")
         if self._connection is None:
             return
         self._connection.send(data.encode())
 
     #receive data from the visualizer
     def receive(self, time_out):
+        print("Solver.py 150")
         if self._connection is None:
             return -1
         try:
@@ -172,6 +178,7 @@ class Solver(object):
     #process the raw data received by the receive function
     #primally splits data in seperate control symbols and asp atoms
     def on_raw_data(self, raw_data):
+        print("Solver.py 179")
         #the visualizer seperates every atom and control symbol with the '.' character
         data = raw_data.split('.')
         for atom in data:
@@ -192,6 +199,7 @@ class Solver(object):
 
     #process received control symbols
     def on_control_symbol(self, symbol):
+        print("Solver.py 201")
         if symbol.name == 'reset':
             #resets the solver to receive a new instance and discard old data
             #the visualizer will send this symbol when it is sending a new instance afterwards
@@ -210,6 +218,7 @@ class Solver(object):
 
     #sends the data from the _to_send dictonary
     def send_step(self, step):
+        print("Solver.py 220")
         #only sends data if it was not send yet
         if step in self._to_send and step > self._sended:
             self._sended = step
@@ -233,6 +242,7 @@ class Solver(object):
 
     #solve the instance
     def solve(self):
+        print("Solver.py 244")
         #loads the given encoding and ground
         self._control.load(self._args.encoding)
 
@@ -254,6 +264,7 @@ class Solver(object):
 
     #model callback for self._control.solve in self.solve
     def on_model(self, model):
+        print("Solver.py 265")
         print('found solution')
         #add empty entry to dictonary
         self._to_send[0] = []
@@ -278,6 +289,7 @@ class Solver(object):
 
     #solver main function
     def run(self):
+        print("Solver.py 290")
         print('Start ' + self._name)
         self.connect()
         #loop to receive data
@@ -404,8 +416,10 @@ class Solverlazycbs(Solver):
         super(Solverlazycbs, self).__init__()
         self.grid_size = ""
         self.time_step = 0
+        self.number_of_robots = 0
     # handels the asp atoms
     def on_data(self, data):
+        print("Solver.py 420")
         # # create asp file to translate
         # with open('viz_instance2solve.lp', 'w') as f:
         #     for atom in data:
@@ -416,7 +430,8 @@ class Solverlazycbs(Solver):
                line = line.replace('\n','')
                line_split = line.split("\t")
                self.grid_size = line_split
-               
+            elif "init" in line and "robot" in line:
+                self.number_of_robots += 1
             else:
                 viz_instance2solve.append(line + '.\n')
         
@@ -445,12 +460,13 @@ class Solverlazycbs(Solver):
                         f.write(",")
                         
                 f.write("\n")
-        
         self.solve()
         
     def solve(self):
+        print("Solver.py 463")
         map_file_name = "../temp/map.ecbs"
-        scene_file_name = convert("../temp/current-instance.lp","../temp/remaining-plan.lp",map_file_name ,2)
+        scene_file_name = convert("../temp/current-instance.lp","../temp/remaining-plan.lp",map_file_name ,self.number_of_robots)
+        self.number_of_robots = 0
         new_cost = 0
         with open("../temp/remaining-plan.lp", "r") as plan_file_reader:
             all_lines = plan_file_reader.readlines()
@@ -483,8 +499,11 @@ class Solverlazycbs(Solver):
         with open("../temp/current-instance.lp","r") as current_instance_reader:
             lines = current_instance_reader.readlines()
 
-        
-        with open("../temp/new-plan.lp","w") as current_plan_writer:
+        today = date.today()
+        now = datetime.now()
+        date_and_time = now.strftime("%d-%m-%Y-%H:%M:%S")
+        os.mkdir("../temp/"+date_and_time)
+        with open("../temp/"+date_and_time+"/new-instance-and-plan.lp","w") as current_plan_writer:
             for line in lines:
                 agent_num = -1
                 agent_x = -1
@@ -525,10 +544,7 @@ class Solverlazycbs(Solver):
                 for line in all_plan_lines:
                     if "move" in line:
                         result = [int(d) for d in re.findall(r'-?\d+', line)]
-                        print("Current Time Step:" + str(self.time_step))
-                        print("Action Time Step:" + str(result[len(result) - 1]))
                         if(result[len(result) - 1] < self.time_step):
-                            print(result[len(result) - 1])
                             current_plan_writer.write(line)
             with open(new_plan_file_name,"r") as new_plan_reader:
                 all_lines = new_plan_reader.readlines()
@@ -537,7 +553,7 @@ class Solverlazycbs(Solver):
                         line_split = re.split("\(|\,|\)",line)
                         line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
                         current_plan_writer.write(line_final)
-            self.send("%SOLVED")
+
 #main
 def main():
     print("MAIN")

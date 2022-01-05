@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Grid size X: 6
 %Grid size Y: 6
-%Time Step: 5
+%Time Step: 1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %init
 init(object(node, 1), value(at, (1, 1))).
@@ -133,18 +133,18 @@ init(object(highway, 35), value(at, (5, 6))).
 init(object(robot,1),value(at,(5, 1))).
 init(object(robot,2),value(at,(6, 2))).
 occurs(object(robot, 1), action(move,(-1,0)), 0).
-occurs(object(robot, 1), action(move,(-1,0)), 1).
-occurs(object(robot, 1), action(move,(0,1)), 2).
-occurs(object(robot, 1), action(move,(-1,0)), 3).
-occurs(object(robot, 1), action(move,(0,1)), 4).
 occurs(object(robot, 2), action(move,(-1,0)), 0).
-occurs(object(robot, 2), action(move,(-1,0)), 1).
-occurs(object(robot, 2), action(move,(0,1)), 2).
-occurs(object(robot, 2), action(move,(-1,0)), 3).
-occurs(object(robot, 2), action(move,(0,1)), 4).
+occurs(object(robot,1),action(move,(-1,  0)),1).
+occurs(object(robot,1),action(move,(0,  1)),2).
+occurs(object(robot,1),action(move,(0,  1)),3).
+occurs(object(robot,1),action(move,(0,  1)),4).
 occurs(object(robot,1),action(move,(0,  1)),5).
 occurs(object(robot,1),action(move,(0,  1)),6).
-occurs(object(robot,1),action(move,(0,  1)),7).
-occurs(object(robot,2),action(move,(0,  0)),5).
+occurs(object(robot,1),action(move,(-1,  0)),7).
+occurs(object(robot,2),action(move,(-1,  0)),1).
+occurs(object(robot,2),action(move,(0,  1)),2).
+occurs(object(robot,2),action(move,(0,  1)),3).
+occurs(object(robot,2),action(move,(0,  0)),4).
+occurs(object(robot,2),action(move,(-1,  0)),5).
 occurs(object(robot,2),action(move,(-1,  0)),6).
 occurs(object(robot,2),action(move,(-1,  0)),7).

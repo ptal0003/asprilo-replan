@@ -107,7 +107,7 @@ class VisualizerSocket(object):
             ready = select.select([self._s], [], [], 0.1)
             while (not breakLoop) and ready[0]:
                 new_data = self._s.recv(2048).decode()
-                print(new_data)
+                print(new_data + "line 110")
                 if not new_data.find('\n') == -1 or new_data == '':
                     breakLoop = True
                 data += new_data
@@ -172,18 +172,17 @@ class SolverSocket(VisualizerSocket):
             return -1
         
         data = self._receive_data()
-        print(data)
         if data is None:
             return
         if data == '':
             return
+        print(data + "line 179")    
         self._waiting = False
         for str_atom in data.split('.'):
             if len(str_atom) != 0 and not (len(str_atom) == 1 and str_atom[0] == '\n'):
                 if str_atom == '%$RESET':
                     self._parser.clear_model_actions(True)
-                else:
-                    print(str_atom)
+                else: 
                     self._parser.on_atom(parse_term(str_atom))
         self._model.update_windows()
 
@@ -220,8 +219,9 @@ class SimulatorSocket(VisualizerSocket):
     def receive(self):
         if self._s is None or self._parser is None:
             return -1
-
+        
         data = self._receive_data()
+        print(data + "line 220")
         empty = True
         reset = False
         if data is None:

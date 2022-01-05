@@ -454,7 +454,6 @@ class VisualizerWindow(QMainWindow):
             if "%Map:" in all_lines[0]:
                 map_path = all_lines[0].split()[1]
                 self._model._map_path = map_path
-        print("HOla")
         return self._asp_parser.parse_file(file_name,
                         clear = True, clear_actions = False)
     def save_instance(self):
@@ -545,7 +544,6 @@ class VisualizerWindow(QMainWindow):
                 self.create_pictures_in_directory(full_file_name)
 
     def show_server_dialog(self, dialog, server_socket):
-        print(server_socket.script_is_running())
         if server_socket.script_is_running():
             dialog.set_address(server_socket.get_host(), server_socket.get_port())
         dialog.show()
