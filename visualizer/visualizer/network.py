@@ -107,13 +107,15 @@ class VisualizerSocket(object):
             ready = select.select([self._s], [], [], 0.1)
             while (not breakLoop) and ready[0]:
                 new_data = self._s.recv(2048).decode()
-                print(new_data + "line 110")
+                print(new_data + "line 110 of network.py")
                 if not new_data.find('\n') == -1 or new_data == '':
                     breakLoop = True
                 data += new_data
             if ready[0] and new_data == '':
                 self.close()
                 return None
+            
+            print("Line 118 of network.py")
         except socket.error as err:
             print(err)
         return data
@@ -176,7 +178,11 @@ class SolverSocket(VisualizerSocket):
             return
         if data == '':
             return
-        print(data + "line 179")    
+        if "COMPLETE" in data:
+            line_split = data.split()
+            new_plan_file = line_split[1]
+            self._parser.parse_file(new_plan_file,clear = False, clear_actions = True)
+            return
         self._waiting = False
         for str_atom in data.split('.'):
             if len(str_atom) != 0 and not (len(str_atom) == 1 and str_atom[0] == '\n'):
@@ -210,6 +216,7 @@ class SolverSocket(VisualizerSocket):
 
     def run(self):
         self.solve()
+        
 
 class SimulatorSocket(VisualizerSocket):
 

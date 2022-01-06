@@ -414,7 +414,7 @@ class SolverInt(SolverInc):
 class Solverlazycbs(Solver):
     def __init__(self):
         super(Solverlazycbs, self).__init__()
-        self.grid_size = ""
+        self.grid_size_and_time = ""
         self.time_step = 0
         self.number_of_robots = 0
     # handels the asp atoms
@@ -425,22 +425,29 @@ class Solverlazycbs(Solver):
         #     for atom in data:
         #         f.write(atom + '.\n')
         viz_instance2solve = []
+        #Data contains all the information from the visualizer, it is called in network.py and contains the content of model.to_actions_str()
         for line in data:
+            #Extracting time step and grid size from the data sent
             if("Time Step and Grid Size:" in line):
                line = line.replace('\n','')
                line_split = line.split("\t")
-               self.grid_size = line_split
+               self.grid_size_and_time = line_split
+            #Increasing the number of robots each time an init robot statement is encountered
             elif "init" in line and "robot" in line:
                 self.number_of_robots += 1
             else:
                 viz_instance2solve.append(line + '.\n')
-        
+        #Creating a temp folder in case it does not exist already
         if not path.exists("../temp"):
             os.mkdir("../temp")
-        self.time_step = int(self.grid_size[1])
-        w = int(self.grid_size[2])+2
-        h = int(self.grid_size[3])+2
+        #Extracting the time step from data
+        self.time_step = int(self.grid_size_and_time[1])
+        #Width and height of the ecbs file is 2 more than the width of the map, this is because of the padding
+        w = int(self.grid_size_and_time[2])+2
+        h = int(self.grid_size_and_time[3])+2
+        #Creating a 2D matrix of all 1s
         arr = [[1 for x in range(w)] for y in range(h)] 
+        #Extracting all data from an instance to create a .ecbs file that represents the map layout being visualized
         for line in data:
             if "init" in line and "highway" in line:
                 line = line.replace("(",",")
@@ -451,6 +458,7 @@ class Solverlazycbs(Solver):
                 x_coord = int(line[-5])
                 y_coord = int(line[-4])
                 arr[x_coord][y_coord] = 0
+        #Writing to the .ecbs file
         with open("../temp/map.ecbs",'w') as f:
             f.write(str(w) + "," + str(h) + "\n")
             for i in range(h):
@@ -463,9 +471,11 @@ class Solverlazycbs(Solver):
         self.solve()
         
     def solve(self):
-        print("Solver.py 463")
+        #Opening the file name
         map_file_name = "../temp/map.ecbs"
+        #Getting the scen file through the instance and remaining plan
         scene_file_name = convert("../temp/current-instance.lp","../temp/remaining-plan.lp",map_file_name ,self.number_of_robots)
+        #Resetting the number of robots each time it is solved
         self.number_of_robots = 0
         new_cost = 0
         with open("../temp/remaining-plan.lp", "r") as plan_file_reader:
@@ -486,10 +496,9 @@ class Solverlazycbs(Solver):
                             individual_constraint = individual_constraint.replace('(','')
                             individual_constraint = individual_constraint.replace(')','')
                             individual_constraint = individual_constraint.split(",")
-                            #individual_constraint.append(re.sub(r'[\[\]\(\), ]', '', line[i]))
                             constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
                             all_constraints.append(constraint_tuple)
-        temp=init("../temp/map.ecbs","../temp/current-instance.scen", 2, [])
+        temp=init("../temp/map.ecbs",scene_file_name, 2, all_constraints)
         solution_file_name = "../temp/solution.txt"
         with open(solution_file_name, "w") as backend_solution:
             backend_solution.write(temp)
@@ -498,12 +507,11 @@ class Solverlazycbs(Solver):
         past_actions = []
         with open("../temp/current-instance.lp","r") as current_instance_reader:
             lines = current_instance_reader.readlines()
-
-        today = date.today()
         now = datetime.now()
         date_and_time = now.strftime("%d-%m-%Y-%H:%M:%S")
         os.mkdir("../temp/"+date_and_time)
-        with open("../temp/"+date_and_time+"/new-instance-and-plan.lp","w") as current_plan_writer:
+        final_plan_and_instance = "../temp/"+date_and_time+"/new-instance-and-plan.lp"
+        with open(final_plan_and_instance,"w") as current_plan_writer:
             for line in lines:
                 agent_num = -1
                 agent_x = -1
@@ -553,7 +561,7 @@ class Solverlazycbs(Solver):
                         line_split = re.split("\(|\,|\)",line)
                         line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
                         current_plan_writer.write(line_final)
-
+        self.send("%$COMPLETE " + final_plan_and_instance + " \n")
 #main
 def main():
     print("MAIN")
