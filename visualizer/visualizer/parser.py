@@ -85,7 +85,7 @@ class AspParser(object):
                     item.set_action(action, time_step)
                 if time_step > self._model.get_num_steps(): 
                     self._model.set_num_steps(time_step)
-                self._model.set_editable(False)
+                self._model.set_editable(True)
         except:
             print('invalid occurs format, expecting: occurs(object([object], [objectID]), action([action], [arguments]), [time step])')
 

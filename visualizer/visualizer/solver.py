@@ -4,7 +4,7 @@
 # All solvers use a given encoding to solve the problems. The solvers use the networking
 # interface from the visualizer and are written to work along with it.
 # This script provides an one shot varaint, an incremental and an interactive solver variant.
-
+import shutil
 import argparse
 import select
 import socket
@@ -507,61 +507,66 @@ class Solverlazycbs(Solver):
         past_actions = []
         with open("../temp/current-instance.lp","r") as current_instance_reader:
             lines = current_instance_reader.readlines()
-        now = datetime.now()
-        date_and_time = now.strftime("%d-%m-%Y-%H:%M:%S")
-        os.mkdir("../temp/"+date_and_time)
-        final_plan_and_instance = "../temp/"+date_and_time+"/new-instance-and-plan.lp"
-        with open(final_plan_and_instance,"w") as current_plan_writer:
+        with open("../temp/current-instance.lp","w") as current_instance_writer:
             for line in lines:
-                agent_num = -1
-                agent_x = -1
-                agent_y = -1
-                agent_dx = 0
-                agent_dy = 0
-                if "highway" in line or "node" in line or "%" in line:
-                        current_plan_writer.write(line)
-                if "init" in line and "robot" in line and "at" in line:
-                        line = line.replace("(",",")
-                        line = line.replace(")",",")
-                        line = line.split(",")
-                        agent_num = int(line[3])
-                        agent_x = int(line[-5])
-                        agent_y = int(line[-4])
-                        with open("../temp/complete-plan.lp","r") as past_movement_reader:
-                            all_actions = past_movement_reader.readlines()
-                            for current_action in all_actions:
-                                current_action = current_action.replace("(",",")
-                                current_action = current_action.replace(")",",")
-                                current_action = current_action.split(",")
-                                if(agent_num == int(current_action[3])):
-                                    if int(current_action[-2]) < self.time_step:
-                                        agent_dx += int(current_action[-6])
-                                        agent_dy += int(current_action[-5])
-                            agent_x -= agent_dx
-                            agent_y -= agent_dy
-                        line_to_be_written = "init(object(robot,"+str(agent_num)+"),value(at,("+str(agent_x)+", "+str(agent_y)+"))).\n"
-                        agent_x = -1
-                        agent_y = -1
-                        agent_dx = 0
-                        agent_dy = 0
-                        current_plan_writer.write(line_to_be_written)
-            with open("../temp/complete-plan.lp","r") as current_plan_reader:
-               
-                all_plan_lines = current_plan_reader.readlines()
+                if("robot" not in line and "at" not in line):
+                    current_instance_writer.write(line)
+            now = datetime.now()
+            date_and_time = now.strftime("%d-%m-%Y-%H:%M:%S")
+            os.mkdir("../temp/"+date_and_time)
+        
+            final_plan = "../temp/"+date_and_time+"/new-plan.lp"
+            with open(final_plan,"w") as current_plan_writer:
+                for line in lines:
+                    agent_num = -1
+                    agent_x = -1
+                    agent_y = -1
+                    agent_dx = 0
+                    agent_dy = 0
+                    if "init" in line and "robot" in line and "at" in line:
+                            line = line.replace("(",",")
+                            line = line.replace(")",",")
+                            line = line.split(",")
+                            agent_num = int(line[3])
+                            agent_x = int(line[-5])
+                            agent_y = int(line[-4])
+                            with open("../temp/complete-plan.lp","r") as past_movement_reader:
+                                all_actions = past_movement_reader.readlines()
+                                for current_action in all_actions:
+                                    current_action = current_action.replace("(",",")
+                                    current_action = current_action.replace(")",",")
+                                    current_action = current_action.split(",")
+                                    if(agent_num == int(current_action[3])):
+                                        if int(current_action[-2]) < self.time_step:
+                                            agent_dx += int(current_action[-6])
+                                            agent_dy += int(current_action[-5])
+                                agent_x -= agent_dx
+                                agent_y -= agent_dy
+                            line_to_be_written = "init(object(robot,"+str(agent_num)+"),value(at,("+str(agent_x)+", "+str(agent_y)+"))).\n"
+                            agent_x = -1
+                            agent_y = -1
+                            agent_dx = 0
+                            agent_dy = 0
+                            current_instance_writer.write(line_to_be_written)
+                shutil.copyfile("../temp/current-instance.lp", "../temp/"+date_and_time+"/current-instance.lp")
+                final_instance = "../temp/"+date_and_time+"/current-instance.lp"
+                with open("../temp/complete-plan.lp","r") as current_plan_reader:
+                
+                    all_plan_lines = current_plan_reader.readlines()
 
-                for line in all_plan_lines:
-                    if "move" in line:
-                        result = [int(d) for d in re.findall(r'-?\d+', line)]
-                        if(result[len(result) - 1] < self.time_step):
-                            current_plan_writer.write(line)
-            with open(new_plan_file_name,"r") as new_plan_reader:
-                all_lines = new_plan_reader.readlines()
-                for line in all_lines:
-                    if "occurs" in line and "move" in line and "robot" in line:
-                        line_split = re.split("\(|\,|\)",line)
-                        line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
-                        current_plan_writer.write(line_final)
-        self.send("%$COMPLETE " + final_plan_and_instance + " \n")
+                    for line in all_plan_lines:
+                        if "move" in line:
+                            result = [int(d) for d in re.findall(r'-?\d+', line)]
+                            if(result[len(result) - 1] < self.time_step):
+                                current_plan_writer.write(line)
+                with open(new_plan_file_name,"r") as new_plan_reader:
+                    all_lines = new_plan_reader.readlines()
+                    for line in all_lines:
+                        if "occurs" in line and "move" in line and "robot" in line:
+                            line_split = re.split("\(|\,|\)",line)
+                            line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
+                            current_plan_writer.write(line_final)
+        self.send("%$COMPLETE " + final_plan  +" "+final_instance+" \n")
 #main
 def main():
     print("MAIN")

@@ -181,6 +181,8 @@ class SolverSocket(VisualizerSocket):
         if "COMPLETE" in data:
             line_split = data.split()
             new_plan_file = line_split[1]
+            new_instance_file = line_split[2]
+            self._parser.parse_file(new_instance_file,clear = False, clear_actions = True)
             self._parser.parse_file(new_plan_file,clear = False, clear_actions = True)
             return
         self._waiting = False

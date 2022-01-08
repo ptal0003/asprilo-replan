@@ -84,7 +84,13 @@ class ModelView(QGraphicsView):
             action.setShortcut('Ctrl + H')
             action.setStatusTip('Removes a highway from the selected node')
             action.triggered.connect(lambda: self._remove_highway(x,y))
-            self._menu.addAction(action)                 
+            self._menu.addAction(action)  
+
+            action = QAction('Add Obstacle', self)
+            action.setStatusTip('Adds an obstacle in the path.')
+            action.triggered.connect(lambda: self._add_obstacle(x,y))
+            self._menu.addAction(action)  
+                           
         elif self._model.is_node(x,y):
             action = QAction('add highway', self)
             action.setShortcut('Ctrl + H')
@@ -203,6 +209,12 @@ class ModelView(QGraphicsView):
     
     def _remove_highway(self, x, y):
         self._model.remove_highway(x, y)
+        self._menu.hide()
+        self._model.update_windows()
+    def _add_obstacle(self, x, y):
+        print("Adding obstacle")
+        self._model.remove_highway(x, y)
+        self._model.remove_node(x, y)
         self._menu.hide()
         self._model.update_windows()
 
