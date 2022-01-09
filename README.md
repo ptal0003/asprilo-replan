@@ -29,6 +29,8 @@ programming. For further details, please consult the documentation on our websit
 Asprilo communicates with the solvers through sockets. Choosing the "Initialise Solver" option from the "Network" menu runs the script "viz-solver" by default which instantiates a solver, the solver it instantiates is determined by the mode specified while initialising the solver.
   
 The communication between visualizer and the solver happens through the "Network.py" and "Solver.py" files. The "Network.py" file contains the code for the client side(Visualizer) that is responsible for sending instance/plan data to the solvers for solving. "Solver.py" is invoked by the script "viz-solver". To change the script being invoked, simply go to the "Initialise Solver" menu and specify the script of choice.
+
+To modify the data being sent, have a look at https://github.com/ptal0003/asprilo-replan/blob/767806e69934934569deb5593205ff556c9869f7/visualizer/visualizer/model.py#L456 and https://github.com/ptal0003/asprilo-replan/blob/767806e69934934569deb5593205ff556c9869f7/visualizer/visualizer/model.py#L477
   
 https://github.com/ptal0003/asprilo-replan/blob/3ee81e8e97b1fca0f340b2b6da6a743fd89efd0b/visualizer/visualizer/solver.py#L23 is a parent class for any solver. This class contains many crucial methods that allow the solver to communicate through sockets. The solver being added by you can override any of these methods if you want to implement things differently. The https://github.com/ptal0003/asprilo-replan/blob/3ee81e8e97b1fca0f340b2b6da6a743fd89efd0b/visualizer/visualizer/solver.py#L244 method is the method responsible for invoking a solver. To get a solution using your own solver, simply invoke the solver here.
   
