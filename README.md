@@ -38,3 +38,4 @@ The "Network.py" file should be notified once the solving is completed. This can
 
 It is received by the "Network.py" file at  https://github.com/ptal0003/asprilo-replan/blob/3ee81e8e97b1fca0f340b2b6da6a743fd89efd0b/visualizer/visualizer/network.py#L181
 
+"Network.py" can be modified to make changes to the model and/or invoke the solver.
