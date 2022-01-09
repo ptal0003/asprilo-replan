@@ -12,7 +12,7 @@ def main():
 def convert_solution_to_plan(arg1, arg2):
     
     num_agents = arg2
-    compatible_plan_path = "../temp/compatible-remaining-plan.lp"
+    compatible_plan_path = "../lazycbs-generated-instances-and-plans/compatible-remaining-plan.lp"
     map_file_name = ""
     
     lines = arg1

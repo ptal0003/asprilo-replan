@@ -437,9 +437,9 @@ class Solverlazycbs(Solver):
                 self.number_of_robots += 1
             else:
                 viz_instance2solve.append(line + '.\n')
-        #Creating a temp folder in case it does not exist already
-        if not path.exists("../temp"):
-            os.mkdir("../temp")
+        #Creating a lazycbs-generated-instances-and-plans folder in case it does not exist already
+        if not path.exists("../lazycbs-generated-instances-and-plans"):
+            os.mkdir("../lazycbs-generated-instances-and-plans")
         #Extracting the time step from data
         self.time_step = int(self.grid_size_and_time[1])
         #Width and height of the ecbs file is 2 more than the width of the map, this is because of the padding
@@ -459,7 +459,7 @@ class Solverlazycbs(Solver):
                 y_coord = int(line[-4])
                 arr[x_coord][y_coord] = 0
         #Writing to the .ecbs file
-        with open("../temp/map.ecbs",'w') as f:
+        with open("../lazycbs-generated-instances-and-plans/map.ecbs",'w') as f:
             f.write(str(w) + "," + str(h) + "\n")
             for i in range(h):
                 for j in range(w):
@@ -472,19 +472,19 @@ class Solverlazycbs(Solver):
         
     def solve(self):
         #Opening the file name
-        map_file_name = "../temp/map.ecbs"
+        map_file_name = "../lazycbs-generated-instances-and-plans/map.ecbs"
         #Getting the scen file through the instance and remaining plan
-        scene_file_name = convert("../temp/current-instance.lp","../temp/remaining-plan.lp",map_file_name ,self.number_of_robots)
+        scene_file_name = convert("../lazycbs-generated-instances-and-plans/current-instance.lp","../lazycbs-generated-instances-and-plans/remaining-plan.lp",map_file_name ,self.number_of_robots)
         #Resetting the number of robots each time it is solved
         self.number_of_robots = 0
         new_cost = 0
-        with open("../temp/remaining-plan.lp", "r") as plan_file_reader:
+        with open("../lazycbs-generated-instances-and-plans/remaining-plan.lp", "r") as plan_file_reader:
             all_lines = plan_file_reader.readlines()
             for line in all_lines:
                 if "move" in line:
                     new_cost += 1
         all_constraints = []
-        with open("../temp/remaining-plan.lp","r") as current_plan_file_reader:
+        with open("../lazycbs-generated-instances-and-plans/remaining-plan.lp","r") as current_plan_file_reader:
             all_lines = current_plan_file_reader.readlines()
             for line in all_lines:
                 if "Constraints:" in line:
@@ -498,21 +498,21 @@ class Solverlazycbs(Solver):
                             individual_constraint = individual_constraint.split(",")
                             constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
                             all_constraints.append(constraint_tuple)
-        temp=init("../temp/map.ecbs",scene_file_name, 2, all_constraints)
+        temp=init("../lazycbs-generated-instances-and-plans/map.ecbs",scene_file_name, 2, all_constraints)
         temp = temp.split("\n")
         new_plan_file_name = convert_solution_to_plan(temp, 2)
         lines = []
-        with open("../temp/current-instance.lp","r") as current_instance_reader:
+        with open("../lazycbs-generated-instances-and-plans/current-instance.lp","r") as current_instance_reader:
             lines = current_instance_reader.readlines()
-        with open("../temp/current-instance.lp","w") as current_instance_writer:
+        with open("../lazycbs-generated-instances-and-plans/current-instance.lp","w") as current_instance_writer:
             for line in lines:
                 if("robot" not in line and "at" not in line):
                     current_instance_writer.write(line)
             now = datetime.now()
             date_and_time = now.strftime("%d-%m-%Y-%H:%M:%S")
-            os.mkdir("../temp/"+date_and_time)
+            os.mkdir("../lazycbs-generated-instances-and-plans/"+date_and_time)
         
-            final_plan = "../temp/"+date_and_time+"/new-plan.lp"
+            final_plan = "../lazycbs-generated-instances-and-plans/"+date_and_time+"/new-plan.lp"
             with open(final_plan,"w") as current_plan_writer:
                 for line in lines:
                     agent_num = -1
@@ -527,7 +527,7 @@ class Solverlazycbs(Solver):
                             agent_num = int(line[3])
                             agent_x = int(line[-5])
                             agent_y = int(line[-4])
-                            with open("../temp/complete-plan.lp","r") as past_movement_reader:
+                            with open("../lazycbs-generated-instances-and-plans/complete-plan.lp","r") as past_movement_reader:
                                 all_actions = past_movement_reader.readlines()
                                 for current_action in all_actions:
                                     current_action = current_action.replace("(",",")
@@ -545,9 +545,9 @@ class Solverlazycbs(Solver):
                             agent_dx = 0
                             agent_dy = 0
                             current_instance_writer.write(line_to_be_written)
-                shutil.copyfile("../temp/current-instance.lp", "../temp/"+date_and_time+"/current-instance.lp")
-                final_instance = "../temp/"+date_and_time+"/current-instance.lp"
-                with open("../temp/complete-plan.lp","r") as current_plan_reader:
+                shutil.copyfile("../lazycbs-generated-instances-and-plans/current-instance.lp", "../lazycbs-generated-instances-and-plans/"+date_and_time+"/instance.lp")
+                final_instance = "../lazycbs-generated-instances-and-plans/"+date_and_time+"/current-instance.lp"
+                with open("../lazycbs-generated-instances-and-plans/complete-plan.lp","r") as current_plan_reader:
                 
                     all_plan_lines = current_plan_reader.readlines()
 
@@ -564,12 +564,12 @@ class Solverlazycbs(Solver):
                             line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
                             current_plan_writer.write(line_final)
         self.send("%$COMPLETE " + final_plan  +" "+final_instance+" \n")
-        os.remove("../temp/remaining-plan.lp")
-        os.remove("../temp/complete-plan.lp")
-        os.remove("../temp/current-instance.lp")
-        os.remove("../temp/current-instance.scen")
-        os.remove("../temp/map.ecbs")
-        os.remove("../temp/compatible-remaining-plan.lp")
+        os.remove("../lazycbs-generated-instances-and-plans/remaining-plan.lp")
+        os.remove("../lazycbs-generated-instances-and-plans/complete-plan.lp")
+        os.remove("../lazycbs-generated-instances-and-plans/current-instance.lp")
+        os.remove("../lazycbs-generated-instances-and-plans/current-instance.scen")
+        os.remove("../lazycbs-generated-instances-and-plans/map.ecbs")
+        os.remove("../lazycbs-generated-instances-and-plans/compatible-remaining-plan.lp")
         
 #main
 def main():
