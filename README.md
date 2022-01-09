@@ -25,5 +25,6 @@ programming. For further details, please consult the documentation on our websit
 8. Click on "Solve" and press OK. 
   
 **Adding a new solver**
+  
 Asprilo communicates with the solvers through sockets. Choosing the "Initialise Solver" option from the "Network" menu runs the script "viz-solver" by default which instantiates a solver, the solver it instantiates is determined by the mode specified while initialising the solver.
 
