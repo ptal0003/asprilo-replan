@@ -499,12 +499,9 @@ class Solverlazycbs(Solver):
                             constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
                             all_constraints.append(constraint_tuple)
         temp=init("../temp/map.ecbs",scene_file_name, 2, all_constraints)
-        solution_file_name = "../temp/solution.txt"
-        with open(solution_file_name, "w") as backend_solution:
-            backend_solution.write(temp)
-        new_plan_file_name = convert_solution_to_plan(solution_file_name, 2)
+        temp = temp.split("\n")
+        new_plan_file_name = convert_solution_to_plan(temp, 2)
         lines = []
-        past_actions = []
         with open("../temp/current-instance.lp","r") as current_instance_reader:
             lines = current_instance_reader.readlines()
         with open("../temp/current-instance.lp","w") as current_instance_writer:
@@ -567,6 +564,13 @@ class Solverlazycbs(Solver):
                             line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
                             current_plan_writer.write(line_final)
         self.send("%$COMPLETE " + final_plan  +" "+final_instance+" \n")
+        os.remove("../temp/remaining-plan.lp")
+        os.remove("../temp/complete-plan.lp")
+        os.remove("../temp/current-instance.lp")
+        os.remove("../temp/current-instance.scen")
+        os.remove("../temp/map.ecbs")
+        os.remove("../temp/compatible-remaining-plan.lp")
+        
 #main
 def main():
     print("MAIN")
