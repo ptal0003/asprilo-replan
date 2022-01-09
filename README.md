@@ -14,7 +14,7 @@ programming. For further details, please consult the documentation on our websit
 - `./generator/` contains the instance generator sources
 - `./visualizer/` contains the instance visualizer sources
 
-##**Running Asprilo and lazycbs solver**
+**Running Asprilo and lazycbs solver**
 1. Clone or download this github repository
 2. Set this-repository/visualizer/scripts as the current working directory.
 3. Run the command "python3 viz"
@@ -24,7 +24,6 @@ programming. For further details, please consult the documentation on our websit
 7. Check the terminal to see if the solver is running as expected. "Connection with <IP Address>" should be seen.
 8. Click on "Solve" and press OK. 
   
-##Adding a new solver
-
+**Adding a new solver**
 Asprilo communicates with the solvers through sockets. Choosing the "Initialise Solver" option from the "Network" menu runs the script "viz-solver" by default which instantiates a solver, the solver it instantiates is determined by the mode specified while initialising the solver.
 
