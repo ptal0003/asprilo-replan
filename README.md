@@ -39,3 +39,6 @@ The "Network.py" file should be notified once the solving is completed. This can
 It is received by the "Network.py" file at  https://github.com/ptal0003/asprilo-replan/blob/3ee81e8e97b1fca0f340b2b6da6a743fd89efd0b/visualizer/visualizer/network.py#L181
 
 "Network.py" can be modified to make changes to the model and/or invoke the solver.
+  
+**Changes made to Asprilo**
+The default solver in Asprilo uses encodings and passes instance/plan data directly to the Clingo which works using Answer Set Programming. This solver takes the model from the currently visualized instance/plan and generates a new solution. However, the specific manner in which Clingo generates solutions and makes use of encodings is not documented very well, and hence is hard to understand. Moreover, the lazycbs solver being used does not need any encodings, unlike Clingo. Since ASP may not be followed by every solver, it is difficult to extract data from the ASP solvers and creating middleware to convert that data into a format supported by the new solver. Therefore, Asprilo has been modified such that it stores the instance, the complete plan and the remaining plan. The new solver can simply read from these files and middleware can be written to convert the atoms into a format supported by the solver, which is more convenient and easier to understand than the existing approach.
