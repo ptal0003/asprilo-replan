@@ -232,7 +232,8 @@ class Solver(object):
     def on_data(self, data):
         #add atoms to clingo
         for atom in data:
-            self._control.add('base', [], atom + '.')
+            if(atom[0] != "%"):
+                self._control.add('base', [], atom + '.')
         if not self.solve().satisfiable:
             return
         print("I can be solved")
@@ -314,6 +315,7 @@ class SolverInc(Solver):
 
         #solve incremental
         self._solve_start = time.time()
+        print("Line 318 SolverInc")
         while True:
             if step > self._args.steps and self._args.steps > 0:
                 print("maximum number of steps exceeded")
@@ -502,17 +504,21 @@ class Solverlazycbs(Solver):
         temp = temp.split("\n")
         new_plan_file_name = convert_solution_to_plan(temp, 2)
         lines = []
+        
+        now = datetime.now()
+        date_and_time = now.strftime("%d-%m-%Y-%H:%M:%S")
+        os.mkdir("../lazycbs-generated-instances-and-plans/"+date_and_time)
+        final_plan = "../lazycbs-generated-instances-and-plans/"+date_and_time+"/new-plan.lp"
+        final_instance = "../lazycbs-generated-instances-and-plans/"+date_and_time+"/current-instance.lp"
+
         with open("../lazycbs-generated-instances-and-plans/current-instance.lp","r") as current_instance_reader:
             lines = current_instance_reader.readlines()
-        with open("../lazycbs-generated-instances-and-plans/current-instance.lp","w") as current_instance_writer:
+        with open(final_instance,"w") as current_instance_writer:
             for line in lines:
-                if("robot" not in line and "at" not in line):
+                if not ("init" in line and "robot" in line):
+                    print(line)
                     current_instance_writer.write(line)
-            now = datetime.now()
-            date_and_time = now.strftime("%d-%m-%Y-%H:%M:%S")
-            os.mkdir("../lazycbs-generated-instances-and-plans/"+date_and_time)
-        
-            final_plan = "../lazycbs-generated-instances-and-plans/"+date_and_time+"/new-plan.lp"
+            
             with open(final_plan,"w") as current_plan_writer:
                 for line in lines:
                     agent_num = -1
@@ -544,9 +550,9 @@ class Solverlazycbs(Solver):
                             agent_y = -1
                             agent_dx = 0
                             agent_dy = 0
+                            print("552 Writing to instance file")
                             current_instance_writer.write(line_to_be_written)
-                shutil.copyfile("../lazycbs-generated-instances-and-plans/current-instance.lp", "../lazycbs-generated-instances-and-plans/"+date_and_time+"/instance.lp")
-                final_instance = "../lazycbs-generated-instances-and-plans/"+date_and_time+"/current-instance.lp"
+                
                 with open("../lazycbs-generated-instances-and-plans/complete-plan.lp","r") as current_plan_reader:
                 
                     all_plan_lines = current_plan_reader.readlines()
@@ -564,6 +570,7 @@ class Solverlazycbs(Solver):
                             line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
                             current_plan_writer.write(line_final)
         self.send("%$COMPLETE " + final_plan  +" "+final_instance+" \n")
+
         os.remove("../lazycbs-generated-instances-and-plans/remaining-plan.lp")
         os.remove("../lazycbs-generated-instances-and-plans/complete-plan.lp")
         os.remove("../lazycbs-generated-instances-and-plans/current-instance.lp")
