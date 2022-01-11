@@ -290,7 +290,6 @@ class Model(object):
             item = Task(ID)
 
         if item is not None:
-            print(item)
             self.add_item(item, add_immediately)
         return item
 
@@ -315,6 +314,32 @@ class Model(object):
             self.notify_sockets(iterator, value, self._current_step)
 
         self._current_step += 1
+        if(update_windows):
+            self.update_windows()
+        return self._current_step
+
+    def go_to_step(self, update_windows = True, step = 0):
+        if self._current_step > self._num_steps or self._num_steps == 0:
+            return self._current_step
+        for socket in self._sockets:
+            if socket.is_waiting():
+                return self._current_step
+        for i in range(step):
+            for items_dic in self._items.values():
+                for item in items_dic.values():
+                    item.on_step_update(self._current_step)
+            for items_dic in self._graphic_items.values():
+                for item in items_dic.values():
+                    item.do_action(self._current_step)
+
+            if self._displayed_steps < self._current_step and len(self._sockets) > 0 and self._num_steps <= self._current_step:
+                self._displayed_steps = self._current_step
+                iterator = iter(self._sockets)
+                value = next(iterator)
+                value.done_step(self._current_step)
+                self.notify_sockets(iterator, value, self._current_step)
+
+        self._current_step += step
         if(update_windows):
             self.update_windows()
         return self._current_step
@@ -369,6 +394,7 @@ class Model(object):
         self._num_steps = 0
 
     def restart(self):
+        print("Restart 371 model.py")
         for items_dic in self._graphic_items.values():
             for item in items_dic.values():
                 item.restart()

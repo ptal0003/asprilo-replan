@@ -569,7 +569,7 @@ class Solverlazycbs(Solver):
                             line_split = re.split("\(|\,|\)",line)
                             line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
                             current_plan_writer.write(line_final)
-        self.send("%$COMPLETE " + final_plan  +" "+final_instance+" \n")
+        self.send("%$COMPLETE " + final_plan  +" "+final_instance+" "+str(self.time_step)+" \n")
 
         os.remove("../lazycbs-generated-instances-and-plans/remaining-plan.lp")
         os.remove("../lazycbs-generated-instances-and-plans/complete-plan.lp")
