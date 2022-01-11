@@ -5,6 +5,7 @@ import time
 import os
 import argparse
 from PyQt5.QtCore import *
+from os import path
 
 from clingo.symbol import parse_term
 
@@ -200,6 +201,9 @@ class SolverSocket(VisualizerSocket):
         self._s.send('%$RESET.'.encode('utf-8'))
         self._model.set_editable(False)
         time_step_str = "%Time Step and Grid Size:\t" + str(self._model.get_current_step()) + "\t" + str(self._model.get_grid_size()[0]) + "\t" + str(self._model.get_grid_size()[1])
+        if not path.exists("../lazycbs-generated-instances-and-plans"):
+            os.mkdir("../lazycbs-generated-instances-and-plans")
+
         self._model.save_to_file("../lazycbs-generated-instances-and-plans/current-instance.lp")
         self._model.save_pending_answer_to_file("../lazycbs-generated-instances-and-plans/remaining-plan.lp")
         self._model.save_answer_to_file("../lazycbs-generated-instances-and-plans/complete-plan.lp")
