@@ -48,3 +48,5 @@ When a solution is generated, the new instance file along with the compatible pl
 
 The following flow chart shows how the entire process of interacting with lazycbs works:
   ![image](https://user-images.githubusercontent.com/62492172/148785076-45145e78-3774-46b1-8320-12e1b5929e6d.png)
+
+In the image, lazycbs can be replaced with any other solver. Asprilo and the solver can only pass data to one another using sockets. However, the method to connect Asprilo and the solver has to be written separately for each solver. 
