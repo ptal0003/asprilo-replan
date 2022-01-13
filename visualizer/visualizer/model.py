@@ -319,12 +319,12 @@ class Model(object):
         return self._current_step
 
     def go_to_step(self, update_windows = True, step = 0):
-        if self._current_step > self._num_steps or self._num_steps == 0:
-            return self._current_step
-        for socket in self._sockets:
-            if socket.is_waiting():
-                return self._current_step
         for i in range(step):
+            if self._current_step > self._num_steps or self._num_steps == 0:
+                return self._current_step
+            for socket in self._sockets:
+                if socket.is_waiting():
+                    return self._current_step
             for items_dic in self._items.values():
                 for item in items_dic.values():
                     item.on_step_update(self._current_step)
@@ -339,7 +339,7 @@ class Model(object):
                 value.done_step(self._current_step)
                 self.notify_sockets(iterator, value, self._current_step)
 
-        self._current_step += step
+            self._current_step += 1
         if(update_windows):
             self.update_windows()
         return self._current_step
