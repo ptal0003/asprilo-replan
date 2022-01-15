@@ -574,8 +574,9 @@ class InitServerDialog(QWidget):
     def on_ok(self, event):
         self.hide()
         try:
+            script_path = os.getcwd() +"/"+ self._textbox.text()
             self._socket.run_script(
-                    self._textbox.text().replace('__dir__', os.path.dirname(sys.argv[0])),
+                    script_path,
                     int(self._port_textbox.text()))
         except(ValueError):
             print('the port must be an integer value')
@@ -1487,16 +1488,14 @@ class EnablePathWidget(QScrollArea):
         for key in self._checkboxes:
             self._checkboxes[key].setChecked(enable)
         
+        
     def on_ok(self):
         for key in self._checkboxes:
             robot = self._model.get_item(item_kind = 'robot', ID = key)
             if robot is not None:
                 robot.set_draw_path(self._checkboxes[key].isChecked())
         self.hide()
-        self._model.refresh()
-        self.update()
-        
-
+        self._model.update_windows()
     def on_cancel(self):
         self.hide()
 

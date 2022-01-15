@@ -13,7 +13,9 @@ from .configuration import *
 from lazycbs import init
 from .createscen import *
 from .planconverter import *
+from .solver import *
 import re
+
 VERSION = '0.2.4'
 
 class VisualizerWindow(QMainWindow):
@@ -265,6 +267,12 @@ class VisualizerWindow(QMainWindow):
         menu_solver.addAction(action)
         self.addAction(action)
 
+        action = QAction('Solve with custom solver', self)
+        action.setStatusTip('Use any solver similar to lazycbs')
+        action.triggered.connect((lambda: testing()))
+        menu_solver.addAction(action)
+        self.addAction(action)
+
         action = QAction('Fast Solve', self)
         action.setShortcut('Ctrl+S')
         action.setStatusTip('Connect the visualizer to a solver and start solving')
@@ -436,8 +444,12 @@ class VisualizerWindow(QMainWindow):
             if "%Map:" in all_lines[0]:
                 map_path = all_lines[0].split()[1]
                 self._model._map_path = map_path
-                
-        return self._asp_parser.parse_file(file_name,
+        if self._model.is_time_step_provided_in_instance():
+            print("Correct")
+            return self._asp_parser.parse_file(file_name,
+                        clear = False, clear_actions = False)
+        else:     
+            return self._asp_parser.parse_file(file_name,
                         clear = False, clear_actions = True)
     def load_answer_from_provided_file(self, file_name):
         self._model.add_plan_file(file_name)
@@ -446,9 +458,8 @@ class VisualizerWindow(QMainWindow):
             if "%Map:" in all_lines[0]:
                 map_path = all_lines[0].split()[1]
                 self._model._map_path = map_path
-                
         return self._asp_parser.parse_file(file_name,
-                        clear = False, clear_actions = False)
+                        clear = True, clear_actions = False)
     def save_instance(self):
         file_name = self._file_dialog.selectedFiles()[0]
         self._model.save_to_file(file_name)
@@ -487,14 +498,12 @@ class VisualizerWindow(QMainWindow):
                     line = line.split()
                     line.pop(0)
                     if(len(line) > 0):
-                        print(line)
                         for i in range(len(line)):
                             individual_constraint = line[i]
                             individual_constraint = individual_constraint.replace('(','')
                             individual_constraint = individual_constraint.replace(')','')
                             individual_constraint = individual_constraint.split(",")
                             #individual_constraint.append(re.sub(r'[\[\]\(\), ]', '', line[i]))
-                            print(individual_constraint)
                             constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
                             all_constraints.append(constraint_tuple)
         temp=init(map_file_name+".ecbs", scene_file_name, 2, all_constraints)
@@ -509,6 +518,8 @@ class VisualizerWindow(QMainWindow):
             for line in lines:
                 if "highway" in line or "node" in line or "%" in line:
                         current_plan_writer.write(line)
+                if "init" in line and "robot" in line:
+                        current_plan_writer.write(line)
                 if "occurs" in line and "move" in line:
                         result = [int(d) for d in re.findall(r'-?\d+', line)]
                         if(result[len(result) - 1] < self._model.get_current_step()):
@@ -519,8 +530,8 @@ class VisualizerWindow(QMainWindow):
                     if "occurs" in line and "move" in line and "robot" in line:
                         line_split = re.split("\(|\,|\)",line)
                         line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + self._model.get_current_step())+").\n"
-                        print(line_final)
                         current_plan_writer.write(line_final)
+        print(temp)         
         return self.load_answer_from_provided_file(current_plan_file_name)
     def create_all_pictures(self):
         directory = str(QFileDialog.getExistingDirectory(self, 'Select directory'))

@@ -1,4 +1,5 @@
 import os.path
+from statistics import mode
 from clingo.control import Control
 from clingo.ast import ProgramBuilder, parse_string
 
@@ -85,7 +86,7 @@ class AspParser(object):
                     item.set_action(action, time_step)
                 if time_step > self._model.get_num_steps(): 
                     self._model.set_num_steps(time_step)
-                self._model.set_editable(False)
+                self._model.set_editable(True)
         except:
             print('invalid occurs format, expecting: occurs(object([object], [objectID]), action([action], [arguments]), [time step])')
 
@@ -192,6 +193,16 @@ class AspParser(object):
         try:
             ff = open(file_name)
             self._programs[file_name] = ff.read()
+            line_split = self._programs[file_name].split("\n")
+            for line in line_split:
+                if "Time Step" in line:
+                    print("Found it")
+                    current_line_split = line.split()
+                    self._model.set_time_step_provided(True)
+                    print(self._model.is_time_step_provided_in_instance())
+                    self._model.set_current_step (int(current_line_split[2]))
+                    self._model.update_windows()
+
             ff.close()
             if self._parser_widget is not None:
                 self._parser_widget.update()
@@ -222,17 +233,21 @@ class AspParser(object):
             return -1
 
         if clear:
+            print("Clear true\n")
             self.reset_programs()
             self.clear_model()
 
         if clear_actions:
+            print("Clear actions true\n")
             self.reset_programs()
             self.clear_model_actions()
 
         if (clear or clear_actions) and self._model_view is not None:
+            print("Line 234 if statement")
             self._model_view.stop_timer()
 
         if clear_grounder:
+            print("Line 238 if statement")
             self.reset_grounder()
         if self.load(file_name) < 0:
             return -1

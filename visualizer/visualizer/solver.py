@@ -4,20 +4,24 @@
 # All solvers use a given encoding to solve the problems. The solvers use the networking
 # interface from the visualizer and are written to work along with it.
 # This script provides an one shot varaint, an incremental and an interactive solver variant.
-
+import shutil
 import argparse
 import select
 import socket
 import time
-
+from lazycbs import init
 from clingo.control import Control
 from clingo.symbol import Function, parse_term
-
+import os
+from lazycbs import init
+from .createscen import *
+from .planconverter import *
+from os import path
+from datetime import date, datetime
 VERSION = '0.2.2'
 #default one shot solver
 class Solver(object):
     def __init__(self):
-        print("SOLVER CONSTRUCTOR")
         self._parser = argparse.ArgumentParser()
         self._parser.add_argument('-p', '--port', help='the port the solver will send the anwsers to',
                             type=int, default = 5000)
@@ -29,7 +33,7 @@ class Solver(object):
                             type = str, default = './encoding.lp')
         self._parser.add_argument('-m', '--mode',
                             help='the mode that the solver should use to solve instances',
-                            type = str, choices=['default', 'incremental', 'interactive', 'online'], default = 'default')
+                            type = str, choices=['default', 'incremental', 'interactive', 'online', 'lazycbs'], default = 'default')
         self._parser.add_argument('-t', '--timeout',
                             help='The maximal number of seconds the solver waits for a solution. 0 means no limit.',
                             type = int, default = 0)
@@ -72,10 +76,12 @@ class Solver(object):
         self._port = self._args.port
 
     def __del__(self):
+        print("Solver.py 78")
         self.close()
 
     #return the solver mode
     def get_mode(self):
+        print("Solver.py 83")
         return self._args.mode
 
     #open the socket and wait for an incomming connection
@@ -104,7 +110,7 @@ class Solver(object):
 
     #close the connection and the socket
     def close(self):
-        print("CLOSE")
+        print("Solver.py 112")
         if self._connection is not None:
             try:
                 self._connection.shutdown(socket.SHUT_RDWR)
@@ -124,7 +130,7 @@ class Solver(object):
 
     #checks whether data can be read from the socket
     def is_ready_to_read(self, time_out = 0.1):
-        print("IS READY TO READ")
+        print("Solver.py 132")
         if self._connection is None:
             return False
         ready = select.select([self._connection], [], [], time_out)
@@ -135,15 +141,14 @@ class Solver(object):
 
     #sends data to the visualizer
     def send(self, data):
-        print(data)
-        print("SEND")
+        print("Solver.py 143")
         if self._connection is None:
             return
         self._connection.send(data.encode())
 
     #receive data from the visualizer
     def receive(self, time_out):
-        print("RECEIVE")
+        print("Solver.py 150")
         if self._connection is None:
             return -1
         try:
@@ -173,7 +178,7 @@ class Solver(object):
     #process the raw data received by the receive function
     #primally splits data in seperate control symbols and asp atoms
     def on_raw_data(self, raw_data):
-        print("ON RAW DATA")
+        print("Solver.py 179")
         #the visualizer seperates every atom and control symbol with the '.' character
         data = raw_data.split('.')
         for atom in data:
@@ -194,7 +199,7 @@ class Solver(object):
 
     #process received control symbols
     def on_control_symbol(self, symbol):
-        print("ON CONTROL SYMBOL")
+        print("Solver.py 201")
         if symbol.name == 'reset':
             #resets the solver to receive a new instance and discard old data
             #the visualizer will send this symbol when it is sending a new instance afterwards
@@ -213,6 +218,7 @@ class Solver(object):
 
     #sends the data from the _to_send dictonary
     def send_step(self, step):
+        print("Solver.py 220")
         #only sends data if it was not send yet
         if step in self._to_send and step > self._sended:
             self._sended = step
@@ -226,7 +232,8 @@ class Solver(object):
     def on_data(self, data):
         #add atoms to clingo
         for atom in data:
-            self._control.add('base', [], atom + '.')
+            if(atom[0] != "%"):
+                self._control.add('base', [], atom + '.')
         if not self.solve().satisfiable:
             return
         print("I can be solved")
@@ -236,7 +243,7 @@ class Solver(object):
 
     #solve the instance
     def solve(self):
-        print("SOLVE")
+        print("Solver.py 244")
         #loads the given encoding and ground
         self._control.load(self._args.encoding)
 
@@ -253,12 +260,12 @@ class Solver(object):
                 return solve_future.get()
             #check timeout
             elif self._args.timeout > 0 and (time.time() - self._solve_start) > self._args.timeout:
-                print('solver timeout after ' , time.time() - self._solve_start, 'secounds')
+                print('solver timeout after ' , time.time() - self._solve_start, 'seconds')
                 return solve_future.get()
 
     #model callback for self._control.solve in self.solve
     def on_model(self, model):
-        print("ON MODEL")
+        print("Solver.py 265")
         print('found solution')
         #add empty entry to dictonary
         self._to_send[0] = []
@@ -278,11 +285,12 @@ class Solver(object):
                 if self._args.occurs:
                     print(atom)
                 self._to_send[0].append(atom)
+        print(self._to_send[0])
         return True
 
     #solver main function
     def run(self):
-        print("RUN")
+        print("Solver.py 290")
         print('Start ' + self._name)
         self.connect()
         #loop to receive data
@@ -307,6 +315,7 @@ class SolverInc(Solver):
 
         #solve incremental
         self._solve_start = time.time()
+        print("Line 318 SolverInc")
         while True:
             if step > self._args.steps and self._args.steps > 0:
                 print("maximum number of steps exceeded")
@@ -404,10 +413,175 @@ class SolverInt(SolverInc):
                 self._to_send[step].append(atom)
         return True
 
+class Solverlazycbs(Solver):
+    def __init__(self):
+        super(Solverlazycbs, self).__init__()
+        self.grid_size_and_time = ""
+        self.time_step = 0
+        self.number_of_robots = 0
+    # handels the asp atoms
+    def on_data(self, data):
+        print("Solver.py 420")
+        # # create asp file to translate
+        # with open('viz_instance2solve.lp', 'w') as f:
+        #     for atom in data:
+        #         f.write(atom + '.\n')
+        viz_instance2solve = []
+        #Data contains all the information from the visualizer, it is called in network.py and contains the content of model.to_actions_str()
+        for line in data:
+            #Extracting time step and grid size from the data sent
+            if("Time Step and Grid Size:" in line):
+               line = line.replace('\n','')
+               line_split = line.split("\t")
+               self.grid_size_and_time = line_split
+            #Increasing the number of robots each time an init robot statement is encountered
+            elif "init" in line and "robot" in line:
+                self.number_of_robots += 1
+            else:
+                viz_instance2solve.append(line + '.\n')
+        #Creating a lazycbs-generated-instances-and-plans folder in case it does not exist already
+        if not path.exists("../lazycbs-generated-instances-and-plans"):
+            os.mkdir("../lazycbs-generated-instances-and-plans")
+        #Extracting the time step from data
+        self.time_step = int(self.grid_size_and_time[1])
+        #Width and height of the ecbs file is 2 more than the width of the map, this is because of the padding
+        w = int(self.grid_size_and_time[2])+2
+        h = int(self.grid_size_and_time[3])+2
+        #Creating a 2D matrix of all 1s
+        arr = [[1 for x in range(w)] for y in range(h)] 
+        #Extracting all data from an instance to create a .ecbs file that represents the map layout being visualized
+        for line in data:
+            if "init" in line and "highway" in line:
+                line = line.replace("(",",")
+                line = line.replace(")",",")
+                line = line.split(',')
+                line[-5] = line[-5].replace(" ", "")
+                line[-4] = line[-4].replace(" ", "")
+                x_coord = int(line[-5])
+                y_coord = int(line[-4])
+                arr[x_coord][y_coord] = 0
+        #Writing to the .ecbs file
+        with open("../lazycbs-generated-instances-and-plans/map.ecbs",'w') as f:
+            f.write(str(w) + "," + str(h) + "\n")
+            for i in range(h):
+                for j in range(w):
+                    f.write(str(arr[j][i]))
+                    if(j < (w-1)):
+                        f.write(",")
+                        
+                f.write("\n")
+        self.solve()
+        
+    def solve(self):
+        #Opening the file name
+        map_file_name = "../lazycbs-generated-instances-and-plans/map.ecbs"
+        #Getting the scen file through the instance and remaining plan
+        scene_file_name = convert("../lazycbs-generated-instances-and-plans/current-instance.lp","../lazycbs-generated-instances-and-plans/remaining-plan.lp",map_file_name ,self.number_of_robots)
+        #Resetting the number of robots each time it is solved
+        self.number_of_robots = 0
+        new_cost = 0
+        with open("../lazycbs-generated-instances-and-plans/remaining-plan.lp", "r") as plan_file_reader:
+            all_lines = plan_file_reader.readlines()
+            for line in all_lines:
+                if "move" in line:
+                    new_cost += 1
+        all_constraints = []
+        with open("../lazycbs-generated-instances-and-plans/remaining-plan.lp","r") as current_plan_file_reader:
+            all_lines = current_plan_file_reader.readlines()
+            for line in all_lines:
+                if "Constraints:" in line:
+                    line = line.split()
+                    line.pop(0)
+                    if(len(line) > 0):
+                        for i in range(len(line)):
+                            individual_constraint = line[i]
+                            individual_constraint = individual_constraint.replace('(','')
+                            individual_constraint = individual_constraint.replace(')','')
+                            individual_constraint = individual_constraint.split(",")
+                            constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
+                            all_constraints.append(constraint_tuple)
+        temp=init("../lazycbs-generated-instances-and-plans/map.ecbs",scene_file_name, 2, all_constraints)
+        temp = temp.split("\n")
+        new_plan_file_name = convert_solution_to_plan(temp, 2)
+        lines = []
+        
+        now = datetime.now()
+        date_and_time = now.strftime("%d-%m-%Y-%H:%M:%S")
+        os.mkdir("../lazycbs-generated-instances-and-plans/"+date_and_time)
+        final_plan = "../lazycbs-generated-instances-and-plans/"+date_and_time+"/new-plan.lp"
+        final_instance = "../lazycbs-generated-instances-and-plans/"+date_and_time+"/current-instance.lp"
+
+        with open("../lazycbs-generated-instances-and-plans/current-instance.lp","r") as current_instance_reader:
+            lines = current_instance_reader.readlines()
+        with open(final_instance,"w") as current_instance_writer:
+            for line in lines:
+                if not ("init" in line and "robot" in line):
+                    print(line)
+                    current_instance_writer.write(line)
+            
+            with open(final_plan,"w") as current_plan_writer:
+                for line in lines:
+                    agent_num = -1
+                    agent_x = -1
+                    agent_y = -1
+                    agent_dx = 0
+                    agent_dy = 0
+                    if "init" in line and "robot" in line and "at" in line:
+                            line = line.replace("(",",")
+                            line = line.replace(")",",")
+                            line = line.split(",")
+                            agent_num = int(line[3])
+                            agent_x = int(line[-5])
+                            agent_y = int(line[-4])
+                            with open("../lazycbs-generated-instances-and-plans/complete-plan.lp","r") as past_movement_reader:
+                                all_actions = past_movement_reader.readlines()
+                                for current_action in all_actions:
+                                    current_action = current_action.replace("(",",")
+                                    current_action = current_action.replace(")",",")
+                                    current_action = current_action.split(",")
+                                    if(agent_num == int(current_action[3])):
+                                        if int(current_action[-2]) < self.time_step:
+                                            agent_dx += int(current_action[-6])
+                                            agent_dy += int(current_action[-5])
+                                agent_x -= agent_dx
+                                agent_y -= agent_dy
+                            line_to_be_written = "init(object(robot,"+str(agent_num)+"),value(at,("+str(agent_x)+", "+str(agent_y)+"))).\n"
+                            agent_x = -1
+                            agent_y = -1
+                            agent_dx = 0
+                            agent_dy = 0
+                            print("552 Writing to instance file")
+                            current_instance_writer.write(line_to_be_written)
+                
+                with open("../lazycbs-generated-instances-and-plans/complete-plan.lp","r") as current_plan_reader:
+                
+                    all_plan_lines = current_plan_reader.readlines()
+
+                    for line in all_plan_lines:
+                        if "move" in line:
+                            result = [int(d) for d in re.findall(r'-?\d+', line)]
+                            if(result[len(result) - 1] < self.time_step):
+                                current_plan_writer.write(line)
+                with open(new_plan_file_name,"r") as new_plan_reader:
+                    all_lines = new_plan_reader.readlines()
+                    for line in all_lines:
+                        if "occurs" in line and "move" in line and "robot" in line:
+                            line_split = re.split("\(|\,|\)",line)
+                            line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
+                            current_plan_writer.write(line_final)
+        self.send("%$COMPLETE " + final_plan  +" "+final_instance+" "+str(self.time_step)+" \n")
+
+        os.remove("../lazycbs-generated-instances-and-plans/remaining-plan.lp")
+        os.remove("../lazycbs-generated-instances-and-plans/complete-plan.lp")
+        os.remove("../lazycbs-generated-instances-and-plans/current-instance.lp")
+        os.remove("../lazycbs-generated-instances-and-plans/current-instance.scen")
+        os.remove("../lazycbs-generated-instances-and-plans/map.ecbs")
+        os.remove("../lazycbs-generated-instances-and-plans/compatible-remaining-plan.lp")
+        
 #main
 def main():
     print("MAIN")
-    solver = Solver()
+    solver = Solverlazycbs()
     mode = solver.get_mode()
     #choose solver mode
     if mode == 'default':
@@ -418,7 +592,10 @@ def main():
         solver = SolverInt()
     elif mode == 'online':
         solver = SolverInt()
+    
+    
     solver.run()
 
 if __name__ == "__main__":
     main()
+

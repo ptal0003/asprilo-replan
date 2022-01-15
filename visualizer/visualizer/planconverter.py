@@ -10,16 +10,14 @@ y_max = 0
 def main():
     convert_solution_to_plan(sys.argv[1], sys.argv[2])
 def convert_solution_to_plan(arg1, arg2):
-    #Opening the ecbs map file to read from it and getting the number of agents
-    num_agents = arg2
-    compatible_plan_path = ""
-    map_file_name = ""
-    with open(arg1,'r') as incompatible_solution_reader:
-        lines = incompatible_solution_reader.readlines()
-        lines[0] = lines[0].split()
-        map_file_name = lines[0][1]
-        compatible_plan_path = os.path.splitext(arg1)[0] + "-compatible-plan.txt"
     
+    num_agents = arg2
+    compatible_plan_path = "../lazycbs-generated-instances-and-plans/compatible-remaining-plan.lp"
+    map_file_name = ""
+    
+    lines = arg1
+    lines[0] = lines[0].split()
+    map_file_name = lines[0][1]
     
     with open(map_file_name, 'r') as map_file:
         all_lines = map_file.readlines()
@@ -41,9 +39,8 @@ def convert_solution_to_plan(arg1, arg2):
     highway_counter = 0
     #Opening the compatible map file for writing, writing the layout(instance details) into asprilo compatible format
     with open(compatible_plan_path, 'w') as asprilo_plan:
-        with open(arg1, 'r') as lazycbs_plan_file:
             asprilo_plan.write("%Map: " + map_file_name)
-            all_lines_constraint_extraction = lazycbs_plan_file.readlines()
+            all_lines_constraint_extraction = arg1
             if(len(all_lines_constraint_extraction) > (int(num_agents) + 1)):
                 all_lines_constraint_extraction_split = all_lines_constraint_extraction[int(num_agents) + 1].split()
                 all_lines_constraint_extraction_split.remove("Constraints:")

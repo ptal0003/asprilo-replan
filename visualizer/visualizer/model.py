@@ -11,7 +11,7 @@ class Model(object):
         self._graphic_items = {}
         self._new_items = {}
         self._editable = True
-        
+        self.time_step_provided_in_instance_file = False
         self._grid_size = (1, 1)
         self._nodes = []                #pairs of x and y
         self._blocked_nodes = [(1,1)]   #pairs of x and y
@@ -43,14 +43,35 @@ class Model(object):
         self._highways = []             #pairs of x and y
         self.instance_files_loaded = []
         self.plan_files_loaded = []
-        
+        self.time_step_provided_in_instance_file = False
         self._inits = []                #list of unhandled inits
         self._num_steps = 0
         self._current_step = 0
         self._displayed_steps = -1
 
         self.update_windows()
-
+    def reset_without_modelviews(self):
+        self._items = {}
+        self._map_path = ""
+        #self._graphic_items = {}
+        self._new_items = {}
+        self._editable = True
+        #self.agent_count = 0
+        self._grid_size = (1, 1)
+        self._nodes = []                #pairs of x and y
+        self._blocked_nodes = [(1,1)]   #pairs of x and y
+        self._highways = []             #pairs of x and y
+        self.instance_files_loaded = []
+        self.plan_files_loaded = []
+        
+        self._inits = []                #list of unhandled inits
+        self._num_steps = 0
+        self._current_step = 0
+        self._displayed_steps = -1
+    def is_time_step_provided_in_instance(self):
+        return self.time_step_provided_in_instance_file
+    def set_time_step_provided(self,provided):
+        self.time_step_provided_in_instance_file = provided
     def add_instance_file(self, file_name):
         self.instance_files_loaded.append(file_name)
     def add_plan_file(self, file_name):
@@ -176,14 +197,15 @@ class Model(object):
     def remove_node(self, x, y):
         if (x,y) not in self._nodes:
             return
-
         self._nodes.remove((x, y))
         if (x,y) not in self._blocked_nodes:
+            print("Remove Node")
             self._blocked_nodes.append((x,y))
 
     def remove_highway(self, x, y):
         if (x,y) not in self._highways:
             return
+        print("Remove Highway")
         self._highways.remove((x,y))
 
     def set_grid_size(self, X, Y, enable_nodes = False):
@@ -220,7 +242,9 @@ class Model(object):
             for node in self._nodes:
                 self._blocked_nodes.remove(node)
         self._grid_size = (X, Y)
-
+    def set_displayed_step(self, step_count):
+        self._displayed_steps = step_count
+        
     def set_editable(self, editable):
         self._editable = editable
         for items_dic in self._graphic_items.values():
@@ -290,7 +314,6 @@ class Model(object):
             item = Task(ID)
 
         if item is not None:
-            print(item)
             self.add_item(item, add_immediately)
         return item
 
@@ -318,9 +341,33 @@ class Model(object):
         if(update_windows):
             self.update_windows()
         return self._current_step
-    def refresh(self):
-        self.update_windows()
+
+    def go_to_step(self, update_windows = True, step = 0):
+        for i in range(step):
+            if self._current_step > self._num_steps or self._num_steps == 0:
+                return self._current_step
+            for socket in self._sockets:
+                if socket.is_waiting():
+                    return self._current_step
+            for items_dic in self._items.values():
+                for item in items_dic.values():
+                    item.on_step_update(self._current_step)
+            for items_dic in self._graphic_items.values():
+                for item in items_dic.values():
+                    item.do_action(self._current_step)
+
+            if self._displayed_steps < self._current_step and len(self._sockets) > 0 and self._num_steps <= self._current_step:
+                self._displayed_steps = self._current_step
+                iterator = iter(self._sockets)
+                value = next(iterator)
+                value.done_step(self._current_step)
+                self.notify_sockets(iterator, value, self._current_step)
+
+            self._current_step += 1
+        if(update_windows):
+            self.update_windows()
         return self._current_step
+
     def notify_sockets(self, iterator, value, step):
         if value.is_waiting():
             if self._notifier is not None:
@@ -371,6 +418,7 @@ class Model(object):
         self._num_steps = 0
 
     def restart(self):
+        print("Restart 371 model.py")
         for items_dic in self._graphic_items.values():
             for item in items_dic.values():
                 item.restart()
@@ -476,7 +524,14 @@ class Model(object):
         for init in self._inits:
             s.append(str(init))
         return s
-
+    def to_actions_str(self):
+        s = []
+        for items_dic in self._graphic_items.values():
+                for item in items_dic.values():
+                    for action in item.to_occurs_str():
+                        if action is not None:
+                            s.append(action)
+        return s
     def save_to_file(self, file_name):
         ofile = open(file_name, 'w')
         try:
