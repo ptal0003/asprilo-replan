@@ -50,6 +50,24 @@ class Model(object):
         self._displayed_steps = -1
 
         self.update_windows()
+    def reset_without_modelviews(self):
+        self._items = {}
+        self._map_path = ""
+        #self._graphic_items = {}
+        self._new_items = {}
+        self._editable = True
+        #self.agent_count = 0
+        self._grid_size = (1, 1)
+        self._nodes = []                #pairs of x and y
+        self._blocked_nodes = [(1,1)]   #pairs of x and y
+        self._highways = []             #pairs of x and y
+        self.instance_files_loaded = []
+        self.plan_files_loaded = []
+        
+        self._inits = []                #list of unhandled inits
+        self._num_steps = 0
+        self._current_step = 0
+        self._displayed_steps = -1
 
     def add_instance_file(self, file_name):
         self.instance_files_loaded.append(file_name)
@@ -176,14 +194,15 @@ class Model(object):
     def remove_node(self, x, y):
         if (x,y) not in self._nodes:
             return
-
         self._nodes.remove((x, y))
         if (x,y) not in self._blocked_nodes:
+            print("Remove Node")
             self._blocked_nodes.append((x,y))
 
     def remove_highway(self, x, y):
         if (x,y) not in self._highways:
             return
+        print("Remove Highway")
         self._highways.remove((x,y))
 
     def set_grid_size(self, X, Y, enable_nodes = False):

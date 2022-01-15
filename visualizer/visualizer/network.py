@@ -224,6 +224,7 @@ class SolverSocket(VisualizerSocket):
             self._s.send(str(action).encode('utf-8'))
         self._s.send(str(time_step_str).encode('utf-8'))
         self._s.send('\n'.encode('utf-8'))
+        self._model.reset_without_modelviews()
         self.run_connection()
 
     def run(self):

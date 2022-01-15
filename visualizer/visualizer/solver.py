@@ -581,7 +581,7 @@ class Solverlazycbs(Solver):
 #main
 def main():
     print("MAIN")
-    solver = Solver()
+    solver = Solverlazycbs()
     mode = solver.get_mode()
     #choose solver mode
     if mode == 'default':
@@ -593,8 +593,7 @@ def main():
     elif mode == 'online':
         solver = SolverInt()
     
-    elif mode == 'lazycbs':
-        solver = Solverlazycbs()
+    
     solver.run()
 
 if __name__ == "__main__":
