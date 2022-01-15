@@ -5,7 +5,6 @@ import time
 import os
 import argparse
 from PyQt5.QtCore import *
-from os import path
 
 from clingo.symbol import parse_term
 
@@ -27,7 +26,6 @@ class VisualizerSocket(object):
         self._parser = parser
 
     def run_script(self, command, port = None):
-        print("Line29")
         self.close()
         self._thread = Thread(target = lambda: os.system(command))
         self._thread.start()
@@ -35,25 +33,20 @@ class VisualizerSocket(object):
             self.connect('127.0.0.1', port)
 
     def join(self, wait_time):
-        print("Line37")
         if self._thread is not None:
             self._thread.join(wait_time)
             self._thread = None
 
     def run_connection(self):
-        print("Line43")
         if self._s is None:
             return
         if self._timer is not None:
             self._timer.stop()
         self._timer = QTimer()
-        
         self._timer.timeout.connect(self.receive)
-        print("Running connection")
         self._timer.start(1000)
 
     def connect(self, host = None, port = None):
-        print("Line55") 
         if self.is_connected() and host == self._host and port == self._port:
             return 0
         if host is not None:
@@ -82,7 +75,6 @@ class VisualizerSocket(object):
         return 0
 
     def send(self, msg):
-        print("line 85")
         if self._s is None or msg is None:
             return
         if msg == '':
@@ -91,7 +83,6 @@ class VisualizerSocket(object):
         pass
 
     def done_step(self, step):
-        print("Line93") 
         if self._s is None:
             return
         self._waiting = True
@@ -101,22 +92,18 @@ class VisualizerSocket(object):
         pass
 
     def _receive_data(self):
-        print("Line103") 
         breakLoop = False                                  
         data = ''
         try:
             ready = select.select([self._s], [], [], 0.1)
             while (not breakLoop) and ready[0]:
                 new_data = self._s.recv(2048).decode()
-                print(new_data + "line 110 of network.py")
                 if not new_data.find('\n') == -1 or new_data == '':
                     breakLoop = True
                 data += new_data
             if ready[0] and new_data == '':
                 self.close()
                 return None
-            
-            print("Line 118 of network.py")
         except socket.error as err:
             print(err)
         return data
@@ -173,63 +160,34 @@ class SolverSocket(VisualizerSocket):
     def receive(self):
         if self._s is None or self._parser is None or self._model is None:
             return -1
-        
+
         data = self._receive_data()
         if data is None:
             return
         if data == '':
             return
-        if "COMPLETE" in data:
-            line_split = data.split()
-            new_plan_file = line_split[1]
-            new_instance_file = line_split[2]
-            time_step = int(line_split[3])
-            print(time_step)
-            
-            self._parser.parse_file(new_instance_file,clear = False, clear_actions = True)
-            self._parser.parse_file(new_plan_file,clear = False, clear_actions = True)
-            self._model.go_to_step(True,time_step)
-            return
         self._waiting = False
         for str_atom in data.split('.'):
             if len(str_atom) != 0 and not (len(str_atom) == 1 and str_atom[0] == '\n'):
-                
                 if str_atom == '%$RESET':
-                    
                     self._parser.clear_model_actions(True)
-                else: 
+                else:
                     self._parser.on_atom(parse_term(str_atom))
         self._model.update_windows()
 
     def solve(self):
-        print("line188")
         if self._s == None or self._model == None: return -1
         self._s.send('%$RESET.'.encode('utf-8'))
         self._model.set_editable(False)
-        time_step_str = "%Time Step and Grid Size:\t" + str(self._model.get_current_step()) + "\t" + str(self._model.get_grid_size()[0]) + "\t" + str(self._model.get_grid_size()[1])
-        if not path.exists("../lazycbs-generated-instances-and-plans"):
-            os.mkdir("../lazycbs-generated-instances-and-plans")
-
-        self._model.save_to_file("../lazycbs-generated-instances-and-plans/current-instance.lp")
-        self._model.save_pending_answer_to_file("../lazycbs-generated-instances-and-plans/remaining-plan.lp")
-        self._model.save_answer_to_file("../lazycbs-generated-instances-and-plans/complete-plan.lp")
         self._model.restart()
-        #self._s.send(time_step_str.encode('utf-8'))
         for atom in self._model.to_init_str():        #send instance
             atom = atom.replace('\n', '')
             self._s.send(str(atom).encode('utf-8'))
-        
-        for action in self._model.to_actions_str():        #send actions
-            action = action.replace('\n', '')
-            self._s.send(str(action).encode('utf-8'))
-        self._s.send(str(time_step_str).encode('utf-8'))
         self._s.send('\n'.encode('utf-8'))
-        self._model.reset_without_modelviews()
         self.run_connection()
 
     def run(self):
         self.solve()
-        
 
 class SimulatorSocket(VisualizerSocket):
 
@@ -239,9 +197,8 @@ class SimulatorSocket(VisualizerSocket):
     def receive(self):
         if self._s is None or self._parser is None:
             return -1
-        
+
         data = self._receive_data()
-        print(data + "line 220")
         empty = True
         reset = False
         if data is None:

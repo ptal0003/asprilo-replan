@@ -85,7 +85,7 @@ class AspParser(object):
                     item.set_action(action, time_step)
                 if time_step > self._model.get_num_steps(): 
                     self._model.set_num_steps(time_step)
-                self._model.set_editable(True)
+                self._model.set_editable(False)
         except:
             print('invalid occurs format, expecting: occurs(object([object], [objectID]), action([action], [arguments]), [time step])')
 
@@ -222,21 +222,17 @@ class AspParser(object):
             return -1
 
         if clear:
-            print("Clear true\n")
             self.reset_programs()
             self.clear_model()
 
         if clear_actions:
-            print("Clear actions true\n")
             self.reset_programs()
             self.clear_model_actions()
 
         if (clear or clear_actions) and self._model_view is not None:
-            print("Line 234 if statement")
             self._model_view.stop_timer()
 
         if clear_grounder:
-            print("Line 238 if statement")
             self.reset_grounder()
         if self.load(file_name) < 0:
             return -1
