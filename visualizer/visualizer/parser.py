@@ -1,5 +1,4 @@
 import os.path
-from statistics import mode
 from clingo.control import Control
 from clingo.ast import ProgramBuilder, parse_string
 
@@ -109,12 +108,16 @@ class AspParser(object):
                         return
 
                 if kind == 'node' and value_name == 'at':                  #init nodes
-                    self._model.add_node(value_value.arguments[0].number, 
+                    if (value_value.arguments[0].number, 
+                                            value_value.arguments[1].number) not in self._model._nodes:
+                        self._model.add_node(value_value.arguments[0].number, 
                                          value_value.arguments[1].number, ID)
                     return
 
                 elif kind == 'highway' and value_name == 'at':             #init highways
-                    self._model.add_highway(value_value.arguments[0].number, 
+                    if (value_value.arguments[0].number, 
+                                            value_value.arguments[1].number) not in self._model.get_highways():
+                        self._model.add_highway(value_value.arguments[0].number, 
                                             value_value.arguments[1].number)
                     return
 
@@ -193,16 +196,12 @@ class AspParser(object):
         try:
             ff = open(file_name)
             self._programs[file_name] = ff.read()
-            line_split = self._programs[file_name].split("\n")
-            for line in line_split:
-                if "Time Step" in line:
-                    print("Found it")
-                    current_line_split = line.split()
+            all_lines = self._programs[file_name].split("\n")
+            for line in all_lines:
+                if "Time Step:" in line:
+                    time_step = int(line.split()[2])
                     self._model.set_time_step_provided(True)
-                    print(self._model.is_time_step_provided_in_instance())
-                    self._model.set_current_step (int(current_line_split[2]))
-                    self._model.update_windows()
-
+                    self._model.go_to_time_step(time_step)
             ff.close()
             if self._parser_widget is not None:
                 self._parser_widget.update()
@@ -231,28 +230,31 @@ class AspParser(object):
         if not os.path.isfile(file_name):
             print('can not open file: ', file_name)
             return -1
+        if self._model.is_time_step_provided():
+            print("Nothing will be cleared as time step is provided in instance")
+        else:
+            if clear:
+                print("Clear true\n")
+                self.reset_programs()
+                self.clear_model()
 
-        if clear:
-            print("Clear true\n")
-            self.reset_programs()
-            self.clear_model()
+            if clear_actions:
+                print("Clear actions true\n")
+                self.reset_programs()
+                self.clear_model_actions()
 
-        if clear_actions:
-            print("Clear actions true\n")
-            self.reset_programs()
-            self.clear_model_actions()
+            if (clear or clear_actions) and self._model_view is not None:
+                print("Line 234 if statement")
+                self._model_view.stop_timer()
 
-        if (clear or clear_actions) and self._model_view is not None:
-            print("Line 234 if statement")
-            self._model_view.stop_timer()
-
-        if clear_grounder:
-            print("Line 238 if statement")
-            self.reset_grounder()
+            if clear_grounder:
+                print("Line 238 if statement")
+                self.reset_grounder()
+        
         if self.load(file_name) < 0:
             return -1
         if self.parse() < 0:
-            return -2
+                return -2
         return 0
 
     def load_instance(self, file_name, create_png = False):

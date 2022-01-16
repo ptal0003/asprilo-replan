@@ -183,19 +183,14 @@ class SolverSocket(VisualizerSocket):
             line_split = data.split()
             new_plan_file = line_split[1]
             new_instance_file = line_split[2]
-            time_step = int(line_split[3])
-            print(time_step)
-            
-            self._parser.parse_file(new_instance_file,clear = False, clear_actions = True)
-            self._parser.parse_file(new_plan_file,clear = False, clear_actions = True)
-            self._model.go_to_step(True,time_step)
+            self._model.clear()
+            self._parser.parse_file(new_instance_file,clear = True, clear_actions = True)
+            self._parser.parse_file(new_plan_file,clear = True, clear_actions = True)
             return
         self._waiting = False
         for str_atom in data.split('.'):
             if len(str_atom) != 0 and not (len(str_atom) == 1 and str_atom[0] == '\n'):
-                
                 if str_atom == '%$RESET':
-                    
                     self._parser.clear_model_actions(True)
                 else: 
                     self._parser.on_atom(parse_term(str_atom))
@@ -224,7 +219,6 @@ class SolverSocket(VisualizerSocket):
             self._s.send(str(action).encode('utf-8'))
         self._s.send(str(time_step_str).encode('utf-8'))
         self._s.send('\n'.encode('utf-8'))
-        self._model.reset_without_modelviews()
         self.run_connection()
 
     def run(self):

@@ -71,13 +71,18 @@ class ModelView(QGraphicsView):
             action.setShortcut('Ctrl + N')
             action.setStatusTip('Disables the selected node')
             action.triggered.connect(lambda: self._remove_node(x, y))
-            self._menu.addAction(action)
-
+            self._menu.addAction(action)   
         else:
             action = QAction('enable node', self)
             action.setShortcut('Ctrl + N')
             action.setStatusTip('Enables the selected node')
             action.triggered.connect(lambda: self._add_node(x, y))
+            self._menu.addAction(action) 
+
+            action = QAction('Remove Obstacle', self)
+            action.setShortcut('Ctrl + R + O')
+            action.setStatusTip('Removes the obstacle added.')
+            action.triggered.connect(lambda: self._remove_obstacle(x, y))
             self._menu.addAction(action) 
 
 
@@ -88,7 +93,10 @@ class ModelView(QGraphicsView):
             action.triggered.connect(lambda: self._remove_highway(x,y))
             self._menu.addAction(action)  
 
-            
+            action = QAction('Add Obstacle', self)
+            action.setStatusTip('Adds an obstacle in the path.')
+            action.triggered.connect(lambda: self._add_obstacle(x,y))
+            self._menu.addAction(action)  
                            
         elif self._model.is_node(x,y):
             action = QAction('add highway', self)
@@ -96,15 +104,7 @@ class ModelView(QGraphicsView):
             action.setStatusTip('Adds a highway to the selected node')
             action.triggered.connect(lambda: self._add_highway(x,y))
             self._menu.addAction(action)                   
-       
-        if self._model.is_highway(x,y) and self._model.is_node(x,y):
-            action = QAction('Add Obstacle', self)
-            action.setShortcut('Ctrl + A + O')
-            action.setStatusTip('Adds an obstacle to the selected node')
-            action.triggered.connect(lambda: self._add_obstacle(x,y))
-            self._menu.addAction(action)                   
-       
-            
+
         robot = self._model.filter_items('robot', position = (x,y), return_first = True)[0]
         shelf = self._model.filter_items('shelf', position = (x,y), return_first = True)[0]
 
@@ -223,8 +223,8 @@ class ModelView(QGraphicsView):
         self._menu.hide()
         self._model.update_windows()
     def _add_obstacle(self, x, y):
-        self._remove_highway(x, y)
-        self._remove_node(x, y)
+        self._model.remove_highway(x, y)
+        self._model.remove_node(x, y)
         self._menu.hide()
         self._model.update_windows()
 

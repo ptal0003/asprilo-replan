@@ -1487,8 +1487,7 @@ class EnablePathWidget(QScrollArea):
     def on_enable_all(self, enable):
         for key in self._checkboxes:
             self._checkboxes[key].setChecked(enable)
-        
-        
+
     def on_ok(self):
         for key in self._checkboxes:
             robot = self._model.get_item(item_kind = 'robot', ID = key)
@@ -1496,6 +1495,7 @@ class EnablePathWidget(QScrollArea):
                 robot.set_draw_path(self._checkboxes[key].isChecked())
         self.hide()
         self._model.update_windows()
+
     def on_cancel(self):
         self.hide()
 

@@ -444,12 +444,8 @@ class VisualizerWindow(QMainWindow):
             if "%Map:" in all_lines[0]:
                 map_path = all_lines[0].split()[1]
                 self._model._map_path = map_path
-        if self._model.is_time_step_provided_in_instance():
-            print("Correct")
-            return self._asp_parser.parse_file(file_name,
-                        clear = False, clear_actions = False)
-        else:     
-            return self._asp_parser.parse_file(file_name,
+                
+        return self._asp_parser.parse_file(file_name,
                         clear = False, clear_actions = True)
     def load_answer_from_provided_file(self, file_name):
         self._model.add_plan_file(file_name)

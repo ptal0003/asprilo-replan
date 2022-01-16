@@ -515,43 +515,10 @@ class Solverlazycbs(Solver):
             lines = current_instance_reader.readlines()
         with open(final_instance,"w") as current_instance_writer:
             for line in lines:
-                if not ("init" in line and "robot" in line):
-                    print(line)
-                    current_instance_writer.write(line)
+                print(line)
+                current_instance_writer.write(line)
             
             with open(final_plan,"w") as current_plan_writer:
-                for line in lines:
-                    agent_num = -1
-                    agent_x = -1
-                    agent_y = -1
-                    agent_dx = 0
-                    agent_dy = 0
-                    if "init" in line and "robot" in line and "at" in line:
-                            line = line.replace("(",",")
-                            line = line.replace(")",",")
-                            line = line.split(",")
-                            agent_num = int(line[3])
-                            agent_x = int(line[-5])
-                            agent_y = int(line[-4])
-                            with open("../lazycbs-generated-instances-and-plans/complete-plan.lp","r") as past_movement_reader:
-                                all_actions = past_movement_reader.readlines()
-                                for current_action in all_actions:
-                                    current_action = current_action.replace("(",",")
-                                    current_action = current_action.replace(")",",")
-                                    current_action = current_action.split(",")
-                                    if(agent_num == int(current_action[3])):
-                                        if int(current_action[-2]) < self.time_step:
-                                            agent_dx += int(current_action[-6])
-                                            agent_dy += int(current_action[-5])
-                                agent_x -= agent_dx
-                                agent_y -= agent_dy
-                            line_to_be_written = "init(object(robot,"+str(agent_num)+"),value(at,("+str(agent_x)+", "+str(agent_y)+"))).\n"
-                            agent_x = -1
-                            agent_y = -1
-                            agent_dx = 0
-                            agent_dy = 0
-                            print("552 Writing to instance file")
-                            current_instance_writer.write(line_to_be_written)
                 
                 with open("../lazycbs-generated-instances-and-plans/complete-plan.lp","r") as current_plan_reader:
                 
@@ -569,7 +536,7 @@ class Solverlazycbs(Solver):
                             line_split = re.split("\(|\,|\)",line)
                             line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
                             current_plan_writer.write(line_final)
-        self.send("%$COMPLETE " + final_plan  +" "+final_instance+" "+str(self.time_step)+" \n")
+        self.send("%$COMPLETE " + final_plan  +" "+final_instance+" \n")
 
         os.remove("../lazycbs-generated-instances-and-plans/remaining-plan.lp")
         os.remove("../lazycbs-generated-instances-and-plans/complete-plan.lp")
@@ -592,8 +559,6 @@ def main():
         solver = SolverInt()
     elif mode == 'online':
         solver = SolverInt()
-    
-    
     solver.run()
 
 if __name__ == "__main__":
