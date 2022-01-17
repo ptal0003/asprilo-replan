@@ -267,11 +267,6 @@ class VisualizerWindow(QMainWindow):
         menu_solver.addAction(action)
         self.addAction(action)
 
-        action = QAction('Solve with custom solver', self)
-        action.setStatusTip('Use any solver similar to lazycbs')
-        action.triggered.connect((lambda: testing()))
-        menu_solver.addAction(action)
-        self.addAction(action)
 
         action = QAction('Fast Solve', self)
         action.setShortcut('Ctrl+S')

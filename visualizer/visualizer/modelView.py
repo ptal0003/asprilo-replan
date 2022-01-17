@@ -193,11 +193,17 @@ class ModelView(QGraphicsView):
     def event(self, event):
         if event.type() == QEvent.ToolTip:
             pos = self.mapToScene(event.pos())
+            x = pos.x()
+            y = pos.y()
             pos = self.scene_coordinates_to_node(pos.x(), pos.y())
+            ss = ''
             if pos is None:
-                self.setToolTip('')
+                self.setToolTip('Obstacle')
                 return super(self.__class__, self).event(event)
-            ss = 'node(' + str(self._model.get_node_id(pos)) +') at ' + str(pos)
+            if self._model.is_highway(pos[0],pos[1]) and self._model.is_node(pos[0],pos[1]):
+                ss = 'Highway(' + str(self._model.get_node_id(pos)) +') at ' + str(pos)  
+            elif not self._model.is_highway(pos[0],pos[1]) and self._model.is_node(pos[0],pos[1]):
+                ss = 'node(' + str(self._model.get_node_id(pos)) +') at ' + str(pos)     
             for item in self._model.filter_items(position = pos):
                 ss += '\n' + item.get_name() + '('+ str(item.get_id()) +')'
             self.setToolTip(ss)

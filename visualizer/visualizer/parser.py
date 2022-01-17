@@ -1,4 +1,6 @@
+from dataclasses import replace
 import os.path
+from shutil import move
 from clingo.control import Control
 from clingo.ast import ProgramBuilder, parse_string
 
@@ -55,6 +57,33 @@ class AspParser(object):
         for x in m.symbols(atoms=True):
             self.on_atom(x)
             self._str_model += str(x) + '\n'
+        all_movements = self._model.get_agent_movements()
+        
+        for i in range(self._model.agent_count):
+            all_initial_locations = self._model.get_starting_agent_locs()
+            current_agent_locs = []
+            current_agent_movements = []
+            for initial_loc in all_initial_locations:
+                if (initial_loc[0] - 1) == i:
+                     current_agent_locs.append(initial_loc[1])
+                        
+            for movement in all_movements:
+                if (int(movement[0]) - 1) == i:
+                    current_agent_movements.append(movement)
+            number_of_movements = len(current_agent_movements)
+            for i in range(number_of_movements - 1):
+                if current_agent_movements[i][2] > current_agent_movements[i+1][2]:
+                    temp = current_agent_movements[i]
+                    current_agent_movements[i] = current_agent_movements[i+1]
+                    current_agent_movements[i+1] = temp
+            for movement in current_agent_movements:
+                temp_str = str(movement[1]).replace("(",",")
+                temp_str = temp_str.replace(")",",")
+                temp_split = temp_str.split(",")
+                new_agent_loc = (current_agent_locs[len(current_agent_locs) - 1][0] + int(temp_split[1]),current_agent_locs[len(current_agent_locs) - 1][1] + int(temp_split[2]))
+                current_agent_locs.append(new_agent_loc)
+            self._model.add_agent_locations_sorted(current_agent_locs)
+        print(self._model.get_agent_locations_sorted())
         self.done_instance()
 
     def on_atom(self, atom):
@@ -64,7 +93,7 @@ class AspParser(object):
             return
         obj = atom.arguments[0]
         value = atom.arguments[1]
-
+        
         if atom.name == 'occurs' and len(atom.arguments) == 3:
             self._on_occurs_atom(obj, value, atom.arguments[2].number)
         elif atom.name == 'init' and len(atom.arguments) == 2:
@@ -76,10 +105,12 @@ class AspParser(object):
 
                 kind = str(obj.arguments[0])
                 ID = str(obj.arguments[1])
-
+                
                 action_name = str(action.arguments[0])
                 action_value = action.arguments[1]
-
+                if action_name == 'move':
+                    self._model.add_agent_movements((ID,action_value,time_step))
+                
                 item = self._model.get_item(kind, ID, True, True)
                 if item is not None:
                     item.set_action(action, time_step)
@@ -94,19 +125,23 @@ class AspParser(object):
             if (obj.name == 'object' and value.name == 'value'
                     and len(obj.arguments) == 2
                     and len(value.arguments) == 2):
-
                 kind = str(obj.arguments[0])
                 ID = str(obj.arguments[1])
-
                 value_name = str(value.arguments[0])
                 value_value = value.arguments[1]
+                
                 item = self._model.get_item(kind, ID, True, self._model.get_editable())
+                if kind == 'robot' and value_name == 'at':
+                    replacement_str = str(value_value).replace('(',',')
+                    replacement_str = replacement_str.replace(')',',')
+                    split_val = replacement_str.split(",")
+                    self._model.agent_count += 1
+                    self._model.add_agent_locations(int(ID), int(split_val[1]), int(split_val[2]) )
                 if item is not None:
                     result = item.parse_init_value(value_name,
                                                     value_value)
                     if result == 0: 
                         return
-
                 if kind == 'node' and value_name == 'at':                  #init nodes
                     if (value_value.arguments[0].number, 
                                             value_value.arguments[1].number) not in self._model._nodes:

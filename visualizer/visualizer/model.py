@@ -10,6 +10,7 @@ class Model(object):
         self._items = {}
         self._graphic_items = {}
         self._new_items = {}
+        self.all_agent_movements = []
         self._editable = True
         self.time_step_provided = False
         self._grid_size = (1, 1)
@@ -24,7 +25,8 @@ class Model(object):
         self._num_steps = 0
         self._current_step = 0
         self._displayed_steps = -1
-
+        self.init_agent_locations = []
+        self.agent_locations_sorted = []
         self._notifier = None
 
     def clear(self):
@@ -44,6 +46,7 @@ class Model(object):
         self._highways = []             #pairs of x and y
         self.instance_files_loaded = []
         self.plan_files_loaded = []
+        self.all_agent_movements = []
         self.time_step_provided = False
         self._inits = []                #list of unhandled inits
         self._num_steps = 0
@@ -51,24 +54,19 @@ class Model(object):
         self._displayed_steps = -1
 
         self.update_windows()
-    def clear(self):
-        self._editable = True
-        self.agent_count = 0
-        self._grid_size = (1, 1)
-        self._nodes = []                #pairs of x and y
-        self._blocked_nodes = [(1,1)]   #pairs of x and y
-        self._highways = []             #pairs of x and y
-        self.instance_files_loaded = []
-        self.plan_files_loaded = []
-        self.time_step_provided = False
-        self._inits = []                #list of unhandled inits
-        self._num_steps = 0
-        self._current_step = 0
-        self._displayed_steps = -1
-
     
+        
     def set_time_step_provided(self,provided):
         self.time_step_provided = provided
+    def add_agent_movements(self,record):
+        self.all_agent_movements.append(record)
+    def get_agent_movements(self):
+        return self.all_agent_movements
+    def add_agent_locations(self,ID, x, y):
+        record = (ID,(x,y))
+        self.init_agent_locations.append(record)
+    def get_starting_agent_locs(self):
+        return self.init_agent_locations
     def is_time_step_provided(self):
         return self.time_step_provided
     def add_instance_file(self, file_name):
@@ -139,6 +137,10 @@ class Model(object):
     def go_to_time_step(self, time_step):
         self.set_current_step(time_step)
         self.update_windows() 
+    def add_agent_locations_sorted(self, list):
+        self.agent_locations_sorted.append(list)
+    def get_agent_locations_sorted(self):
+        return self.agent_locations_sorted
     def remove_item(self, item):
         if item is None:
             return
@@ -194,6 +196,8 @@ class Model(object):
 
     def is_highway(self, x, y):
         return (x, y) in self._highways
+    def is_blocked_node(self, x, y):
+        return (x, y) in self._blocked_nodes
 
     def remove_node(self, x, y):
         if (x,y) not in self._nodes:
