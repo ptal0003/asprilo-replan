@@ -1448,7 +1448,6 @@ class EnablePathWidget(QScrollArea):
 
         self._ok_button = QPushButton('Ok', self._area)
         self._cancel_button = QPushButton('Cancel', self._area)
-
         self._ok_button.clicked.connect(self.on_ok)
         self._cancel_button.clicked.connect(self.on_cancel)
 
@@ -1503,6 +1502,7 @@ class EnablePathWidget(QScrollArea):
         self._model = model
         if self._model is not None:
             self._model.add_window(self)
+        
         self.update()
 
 class RobotMonitor(VizWidget):

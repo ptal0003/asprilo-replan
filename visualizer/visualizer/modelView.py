@@ -202,6 +202,7 @@ class ModelView(QGraphicsView):
                 return super(self.__class__, self).event(event)
             if self._model.is_highway(pos[0],pos[1]) and self._model.is_node(pos[0],pos[1]):
                 ss = 'Highway(' + str(self._model.get_node_id(pos)) +') at ' + str(pos)  
+                ss += self._model.get_robot_info_at_node(pos[0],pos[1])
             elif not self._model.is_highway(pos[0],pos[1]) and self._model.is_node(pos[0],pos[1]):
                 ss = 'node(' + str(self._model.get_node_id(pos)) +') at ' + str(pos)     
             for item in self._model.filter_items(position = pos):

@@ -58,11 +58,12 @@ class AspParser(object):
             self.on_atom(x)
             self._str_model += str(x) + '\n'
         all_movements = self._model.get_agent_movements()
-        
+
         for i in range(self._model.agent_count):
             all_initial_locations = self._model.get_starting_agent_locs()
             current_agent_locs = []
             current_agent_movements = []
+            
             for initial_loc in all_initial_locations:
                 if (initial_loc[0] - 1) == i:
                      current_agent_locs.append(initial_loc[1])
@@ -70,12 +71,20 @@ class AspParser(object):
             for movement in all_movements:
                 if (int(movement[0]) - 1) == i:
                     current_agent_movements.append(movement)
+            
             number_of_movements = len(current_agent_movements)
-            for i in range(number_of_movements - 1):
-                if current_agent_movements[i][2] > current_agent_movements[i+1][2]:
-                    temp = current_agent_movements[i]
-                    current_agent_movements[i] = current_agent_movements[i+1]
-                    current_agent_movements[i+1] = temp
+            for i in range(number_of_movements-1):
+                # range(n) also work but outer loop will
+                # repeat one time more than needed.
+                # Last i elements are already in place
+                for j in range(0, number_of_movements-i-1):
+ 
+                    # traverse the array from 0 to n-i-1
+                    # Swap if the element found is greater
+                    # than the next element
+                    if current_agent_movements[j][2] > current_agent_movements[j + 1][2] :
+                        current_agent_movements[j], current_agent_movements[j + 1] = current_agent_movements[j + 1], current_agent_movements[j]
+            
             for movement in current_agent_movements:
                 temp_str = str(movement[1]).replace("(",",")
                 temp_str = temp_str.replace(")",",")
@@ -83,7 +92,7 @@ class AspParser(object):
                 new_agent_loc = (current_agent_locs[len(current_agent_locs) - 1][0] + int(temp_split[1]),current_agent_locs[len(current_agent_locs) - 1][1] + int(temp_split[2]))
                 current_agent_locs.append(new_agent_loc)
             self._model.add_agent_locations_sorted(current_agent_locs)
-        print(self._model.get_agent_locations_sorted())
+        self._model.get_robot_info_at_node(5,4)
         self.done_instance()
 
     def on_atom(self, atom):

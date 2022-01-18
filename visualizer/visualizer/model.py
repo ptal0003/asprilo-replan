@@ -58,6 +58,8 @@ class Model(object):
         
     def set_time_step_provided(self,provided):
         self.time_step_provided = provided
+    def update_initial_location(self,ID, x, y):
+        self.init_agent_locations[ID-1] = (ID,(x,y))
     def add_agent_movements(self,record):
         self.all_agent_movements.append(record)
     def get_agent_movements(self):
@@ -644,3 +646,30 @@ class Model(object):
         return self._map_kind_to_dictionarie(item.get_kind_name(), 
                                                 dictionarie, 
                                                 create_dictionarie)
+    def get_robot_info_at_node(self, x, y):
+        output_str = ''
+        node_occurrences_in_agent_paths = []
+        robots_passing = []
+        for i in range(self.agent_count):
+            for j in range(len(self.agent_locations_sorted[i])):
+                if self.agent_locations_sorted[i][j] == (x,y):
+                    print(i + 1,j)
+                    if self.agent_locations_sorted[i].count((x,y)) < 2:
+                        robots_passing.append((i+1,j))
+        for i in range(len(robots_passing)):
+            output_str += "\nRobot " + str(robots_passing[i][0]) + " passes at " + str(robots_passing[i][1])
+        for i in range(self.agent_count):
+            counter = 0
+            flag = False
+            
+            for location in self.agent_locations_sorted[i]:
+                if location[0] == x and location[1] == y:
+                    if not flag:
+                        counter += 1
+                    if counter >= 2 and not flag:
+                       flag = True
+                       time_step = self.agent_locations_sorted[i].index(location)
+                       output_str += "\nRobot " + str(i+1) + " waiting" + " at time step " + str(time_step)    
+
+            node_occurrences_in_agent_paths.append(counter)
+        return output_str
