@@ -54,20 +54,36 @@ class AspParser(object):
             parser_widget.update()
 
     def on_model(self, m):
+        
         for x in m.symbols(atoms=True):
             self.on_atom(x)
             self._str_model += str(x) + '\n'
+           
         all_movements = self._model.get_agent_movements()
-
+        if self._model.is_instance_loaded():
+            
+            for i in range(self._model.agent_count):
+                agent_movement_before_time_step_loaded = [0,0]
+                for movement in all_movements:
+                    if (int(movement[0]) - 1) == i and int(movement[2]) < self._model.get_current_step():
+                        temp_str = str(movement[1]).replace("(",",")
+                        temp_str = temp_str.replace(")",",")
+                        temp_split = temp_str.split(",")
+                        
+                        agent_movement_before_time_step_loaded[0] += int(temp_split[1])
+                        agent_movement_before_time_step_loaded[1] += int(temp_split[2])
+                self._model.update_initial_location_with_change(i+1, agent_movement_before_time_step_loaded[0], agent_movement_before_time_step_loaded[1])
+        all_initial_locations = self._model.get_starting_agent_locs()
+        
         for i in range(self._model.agent_count):
-            all_initial_locations = self._model.get_starting_agent_locs()
+            
             current_agent_locs = []
             current_agent_movements = []
             
             for initial_loc in all_initial_locations:
                 if (initial_loc[0] - 1) == i:
-                     current_agent_locs.append(initial_loc[1])
-                        
+                    current_agent_locs.append(initial_loc[1])
+                    
             for movement in all_movements:
                 if (int(movement[0]) - 1) == i:
                     current_agent_movements.append(movement)
@@ -84,15 +100,15 @@ class AspParser(object):
                     # than the next element
                     if current_agent_movements[j][2] > current_agent_movements[j + 1][2] :
                         current_agent_movements[j], current_agent_movements[j + 1] = current_agent_movements[j + 1], current_agent_movements[j]
-            
             for movement in current_agent_movements:
                 temp_str = str(movement[1]).replace("(",",")
                 temp_str = temp_str.replace(")",",")
                 temp_split = temp_str.split(",")
                 new_agent_loc = (current_agent_locs[len(current_agent_locs) - 1][0] + int(temp_split[1]),current_agent_locs[len(current_agent_locs) - 1][1] + int(temp_split[2]))
                 current_agent_locs.append(new_agent_loc)
-            self._model.add_agent_locations_sorted(current_agent_locs)
-        self._model.get_robot_info_at_node(5,4)
+            if (self._model.is_time_step_provided() and self._model.is_instance_loaded()) or not self._model.is_time_step_provided():
+                self._model.add_agent_locations_sorted(current_agent_locs)
+            
         self.done_instance()
 
     def on_atom(self, atom):
@@ -102,7 +118,6 @@ class AspParser(object):
             return
         obj = atom.arguments[0]
         value = atom.arguments[1]
-        
         if atom.name == 'occurs' and len(atom.arguments) == 3:
             self._on_occurs_atom(obj, value, atom.arguments[2].number)
         elif atom.name == 'init' and len(atom.arguments) == 2:
@@ -140,11 +155,11 @@ class AspParser(object):
                 value_value = value.arguments[1]
                 
                 item = self._model.get_item(kind, ID, True, self._model.get_editable())
-                if kind == 'robot' and value_name == 'at':
+                if kind == 'robot' and value_name == 'at' and not self._model.is_instance_loaded():
+
                     replacement_str = str(value_value).replace('(',',')
                     replacement_str = replacement_str.replace(')',',')
                     split_val = replacement_str.split(",")
-                    self._model.agent_count += 1
                     self._model.add_agent_locations(int(ID), int(split_val[1]), int(split_val[2]) )
                 if item is not None:
                     result = item.parse_init_value(value_name,
@@ -183,6 +198,8 @@ class AspParser(object):
             print(('invalid init: init(' + str(obj) + ', ' + str(value) + ')'))
 
     def done_instance(self, enable_auto_solve = True):
+        if self._model.is_time_step_provided():
+            self._model.set_instance_loaded(True)
         self._model.accept_new_items()
         self._model.update_windows()
         if (self._solver is not None
@@ -264,7 +281,6 @@ class AspParser(object):
                     parse_string(self._programs[key], lambda stm: bb.add(stm))
             self._control.ground([('base', [])])
             result = self._control.solve(on_model=self.on_model)
-            print(result)
         except RuntimeError as error:
             print(error)
             return -2

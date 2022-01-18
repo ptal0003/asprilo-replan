@@ -10,30 +10,32 @@ class Model(object):
         self._items = {}
         self._graphic_items = {}
         self._new_items = {}
-        self.all_agent_movements = []
         self._editable = True
-        self.time_step_provided = False
         self._grid_size = (1, 1)
         self._nodes = []                #pairs of x and y
         self._blocked_nodes = [(1,1)]   #pairs of x and y
         self._highways = []             #pairs of x and y
         self._node_ids = {}
-        self.instance_files_loaded = []
-        self.plan_files_loaded = []
         self._inits = []                #list of unhandled inits
-        self.agent_count = 0
+        self._notifier = None
         self._num_steps = 0
         self._current_step = 0
+
         self._displayed_steps = -1
         self.init_agent_locations = []
+        self.all_agent_movements = []
         self.agent_locations_sorted = []
-        self._notifier = None
-
+        self.instance_loaded = False
+        self.time_step_provided = False
+        self.instance_files_loaded = []
+        self.plan_files_loaded = []
+        self.agent_count = 0
     def clear(self):
         for window in self._windows:
             if isinstance(window, ModelView):
                 window.clear()
         print("CLEAR MODEL.PY 34")
+        
         self._items = {}
         self._map_path = ""
         self._graphic_items = {}
@@ -46,20 +48,33 @@ class Model(object):
         self._highways = []             #pairs of x and y
         self.instance_files_loaded = []
         self.plan_files_loaded = []
-        self.all_agent_movements = []
-        self.time_step_provided = False
         self._inits = []                #list of unhandled inits
         self._num_steps = 0
         self._current_step = 0
         self._displayed_steps = -1
 
+        self.init_agent_locations = []
+        self.all_agent_movements = []
+        self.agent_locations_sorted = []
+        self.instance_loaded = False
+        self.time_step_provided = False
         self.update_windows()
     
-        
+    def set_instance_loaded(self,loaded):
+        self.instance_loaded = loaded
+    def is_instance_loaded(self):
+        return self.instance_loaded
     def set_time_step_provided(self,provided):
         self.time_step_provided = provided
-    def update_initial_location(self,ID, x, y):
-        self.init_agent_locations[ID-1] = (ID,(x,y))
+    def update_initial_location_with_change(self,ID, dx, dy):
+        original_record = ()
+        for location in self.init_agent_locations:
+            if location[0] == ID:
+                original_record = location
+        self.init_agent_locations.remove(original_record)
+        updated_record = (ID,(int(original_record[1][0]) - dx, int(original_record[1][1]) - dy )  )
+        self.init_agent_locations.append(updated_record)
+        
     def add_agent_movements(self,record):
         self.all_agent_movements.append(record)
     def get_agent_movements(self):
@@ -310,6 +325,7 @@ class Model(object):
             item = ChargingStation(ID)
         elif item_kind == 'robot':
             item = Robot(ID)
+            self.agent_count += 1
         elif item_kind == 'order':
             item = Order(ID)
         elif item_kind == 'checkpoint':
@@ -318,7 +334,6 @@ class Model(object):
             item = Task(ID)
 
         if item is not None:
-            print(item)
             self.add_item(item, add_immediately)
         return item
 
@@ -653,7 +668,6 @@ class Model(object):
         for i in range(self.agent_count):
             for j in range(len(self.agent_locations_sorted[i])):
                 if self.agent_locations_sorted[i][j] == (x,y):
-                    print(i + 1,j)
                     if self.agent_locations_sorted[i].count((x,y)) < 2:
                         robots_passing.append((i+1,j))
         for i in range(len(robots_passing)):
