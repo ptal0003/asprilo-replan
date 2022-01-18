@@ -108,7 +108,10 @@ class AspParser(object):
                 current_agent_locs.append(new_agent_loc)
             if (self._model.is_time_step_provided() and self._model.is_instance_loaded()) or not self._model.is_time_step_provided():
                 self._model.add_agent_locations_sorted(current_agent_locs)
-            
+        for id in range(self._model.agent_count):
+            robot = self._model.get_item('robot',id+1)
+            if robot is not None:
+                robot.set_draw_path(True)
         self.done_instance()
 
     def on_atom(self, atom):

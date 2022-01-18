@@ -183,7 +183,7 @@ class SolverSocket(VisualizerSocket):
             line_split = data.split()
             new_plan_file = line_split[1]
             new_instance_file = line_split[2]
-            self._model.clear()
+            self._model.clear(False)
             self._parser.parse_file(new_instance_file,clear = True, clear_actions = True)
             self._parser.parse_file(new_plan_file,clear = True, clear_actions = True)
             return

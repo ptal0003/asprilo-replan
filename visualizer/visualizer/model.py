@@ -30,15 +30,14 @@ class Model(object):
         self.instance_files_loaded = []
         self.plan_files_loaded = []
         self.agent_count = 0
-    def clear(self):
+    def clear(self, clear_path = True):
+        print(clear_path)
         for window in self._windows:
             if isinstance(window, ModelView):
                 window.clear()
-        print("CLEAR MODEL.PY 34")
-        
+        self._graphic_items = {}
         self._items = {}
         self._map_path = ""
-        self._graphic_items = {}
         self._new_items = {}
         self._editable = True
         self.agent_count = 0
@@ -115,7 +114,6 @@ class Model(object):
             return self._add_item2(item)
         if item is None:
             return
-        print(item.get_kind_name())
         key = (item.get_kind_name(), str(item.get_id()))
         if key in self._new_items:
             return
