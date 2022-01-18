@@ -54,62 +54,71 @@ class AspParser(object):
             parser_widget.update()
 
     def on_model(self, m):
-        
+        #Adding all the symbols in the atom to the model, if it is the instance file, these would be action atoms, in instance files, it would be mainly init atoms
         for x in m.symbols(atoms=True):
+            #Inside on_atom, different methods are called depending on the type of the atom
             self.on_atom(x)
             self._str_model += str(x) + '\n'
-           
+        #When the instance followed by the plan have been loaded, all occurs atoms would have been loaded in the model, this would mean that the array containing the movements of all agents at different timesteps would be ready. That array is being accessed in the next line
         all_movements = self._model.get_agent_movements()
+        #Checking if the instance file provided a time step. If a time step was provided, then the initial location would be the one before the movements until the current time step were made. Therefore, requiring us to update the initial location if a timestep was provided.
         if self._model.is_instance_loaded():
-            
+            #Iterating through all agents 
             for i in range(self._model.agent_count):
+                #Stores the sum of movements until the current time step for the current agent
                 agent_movement_before_time_step_loaded = [0,0]
+                #Iterating through all the movements
                 for movement in all_movements:
+                    #Checking if the movement is for the current agent and occurred before the current time step
                     if (int(movement[0]) - 1) == i and int(movement[2]) < self._model.get_current_step():
                         temp_str = str(movement[1]).replace("(",",")
                         temp_str = temp_str.replace(")",",")
                         temp_split = temp_str.split(",")
-                        
+                        #Adding the current movement to the sum of movements before the timestep
                         agent_movement_before_time_step_loaded[0] += int(temp_split[1])
                         agent_movement_before_time_step_loaded[1] += int(temp_split[2])
+                #Updating the initial location by subtracting the movements before the current time step from the current position        
                 self._model.update_initial_location_with_change(i+1, agent_movement_before_time_step_loaded[0], agent_movement_before_time_step_loaded[1])
+        #Getting the correct starting location of all the agents with their ID in format [(ID,(x,y))]
         all_initial_locations = self._model.get_starting_agent_locs()
         
         for i in range(self._model.agent_count):
-            
+            #Store the timestep-wise location and movements of all agents
             current_agent_locs = []
             current_agent_movements = []
-            
+            #Adding the first location for each agent from the initial locations array calculated above
             for initial_loc in all_initial_locations:
                 if (initial_loc[0] - 1) == i:
                     current_agent_locs.append(initial_loc[1])
-                    
+            #Checking if the movemement was for the current agent, adding it to the array if it was
             for movement in all_movements:
                 if (int(movement[0]) - 1) == i:
                     current_agent_movements.append(movement)
-            
+            #Bubble sorting all the movements according to time step to get a sorted array of robot movements for the current agent
             number_of_movements = len(current_agent_movements)
-            for i in range(number_of_movements-1):
+            for k in range(number_of_movements-1):
                 # range(n) also work but outer loop will
                 # repeat one time more than needed.
-                # Last i elements are already in place
-                for j in range(0, number_of_movements-i-1):
+                # Last k elements are already in place
+                for j in range(0, number_of_movements-k-1):
  
-                    # traverse the array from 0 to n-i-1
+                    # traverse the array from 0 to n-k-1
                     # Swap if the element found is greater
                     # than the next element
                     if current_agent_movements[j][2] > current_agent_movements[j + 1][2] :
                         current_agent_movements[j], current_agent_movements[j + 1] = current_agent_movements[j + 1], current_agent_movements[j]
+            #Iterating through the sorted agent movemements to calculate the agent locations at each timestep
             for movement in current_agent_movements:
                 temp_str = str(movement[1]).replace("(",",")
                 temp_str = temp_str.replace(")",",")
                 temp_split = temp_str.split(",")
                 new_agent_loc = (current_agent_locs[len(current_agent_locs) - 1][0] + int(temp_split[1]),current_agent_locs[len(current_agent_locs) - 1][1] + int(temp_split[2]))
                 current_agent_locs.append(new_agent_loc)
+            
             if (self._model.is_time_step_provided() and self._model.is_instance_loaded()) or not self._model.is_time_step_provided():
                 self._model.add_agent_locations_sorted(current_agent_locs)
-        for id in range(self._model.agent_count):
-            robot = self._model.get_item('robot',id+1)
+            #Turning on the path for each robot by default
+            robot = self._model.get_item('robot',i + 1)
             if robot is not None:
                 robot.set_draw_path(True)
         self.done_instance()
@@ -121,6 +130,7 @@ class AspParser(object):
             return
         obj = atom.arguments[0]
         value = atom.arguments[1]
+        #If it is an occurs atom, on_occurs_atom is called, otherwise on_init_atom is called
         if atom.name == 'occurs' and len(atom.arguments) == 3:
             self._on_occurs_atom(obj, value, atom.arguments[2].number)
         elif atom.name == 'init' and len(atom.arguments) == 2:
@@ -135,6 +145,7 @@ class AspParser(object):
                 
                 action_name = str(action.arguments[0])
                 action_value = action.arguments[1]
+                #If it is a movement, the movement is added to the list of agent movement. This list contains the list of agent movements along with their ID's
                 if action_name == 'move':
                     self._model.add_agent_movements((ID,action_value,time_step))
                 
@@ -158,8 +169,9 @@ class AspParser(object):
                 value_value = value.arguments[1]
                 
                 item = self._model.get_item(kind, ID, True, self._model.get_editable())
+                #If the item is a robot, the initial location of the robot is added to the list storing agent locatiions
                 if kind == 'robot' and value_name == 'at' and not self._model.is_instance_loaded():
-
+                    #Extracting relevant information about ID and location from the atom
                     replacement_str = str(value_value).replace('(',',')
                     replacement_str = replacement_str.replace(')',',')
                     split_val = replacement_str.split(",")
@@ -201,6 +213,7 @@ class AspParser(object):
             print(('invalid init: init(' + str(obj) + ', ' + str(value) + ')'))
 
     def done_instance(self, enable_auto_solve = True):
+        #If a time step was present in the file, that means an instance file was loaded into asprilo.
         if self._model.is_time_step_provided():
             self._model.set_instance_loaded(True)
         self._model.accept_new_items()
@@ -260,10 +273,13 @@ class AspParser(object):
         try:
             ff = open(file_name)
             self._programs[file_name] = ff.read()
+            #Reading the lines from the last loaded file and looking for time step information in it, if it is found that means that it is an instance file and relevant variables are updated accordingly.
             all_lines = self._programs[file_name].split("\n")
             for line in all_lines:
                 if "Time Step:" in line:
+                    #Getting the time step from the instance file
                     time_step = int(line.split()[2])
+                    #Setting the time step in the model, so that it knows when to execute the plan from
                     self._model.set_time_step_provided(True)
                     self._model.go_to_time_step(time_step)
             ff.close()
@@ -293,6 +309,7 @@ class AspParser(object):
         if not os.path.isfile(file_name):
             print('can not open file: ', file_name)
             return -1
+        #If the time step was detected in the instance file, the model will not execute the clear statements
         if self._model.is_time_step_provided():
             print("Nothing will be cleared as time step is provided in instance")
         else:
@@ -313,14 +330,16 @@ class AspParser(object):
             if clear_grounder:
                 print("Line 238 if statement")
                 self.reset_grounder()
-        
+        #Loading the file into the parser, the time step(If provided) is set in this function
         if self.load(file_name) < 0:
             return -1
+        #Parses individual atoms and adds them to the model, depending on actions/init statements, different methods are called inside on_atom
         if self.parse() < 0:
                 return -2
         return 0
 
     def load_instance(self, file_name, create_png = False):
+        #Parsing all the atoms from the file and adding them to the model
         result = self.parse_file(file_name, clear = True)
         if result < 0:
             return result
@@ -337,13 +356,6 @@ class AspParser(object):
                                                 position2.y() - position.y()))
             pixmap.save(file_name[0 : file_name.rfind('.')] + '.png')
         self._model.update_windows()
-        with open(file_name, 'r') as instance_file:
-            all_lines = instance_file.readlines()
-            for line in all_lines:
-                if "Time Step" in line:
-                    line = line.split()
-                    self._model.set_current_step(int(line[-1]))
-                    self._model_view.get_model().set_current_step(int(line[-1]))
         return 0
 
     def list_programs(self):

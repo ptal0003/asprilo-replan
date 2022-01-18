@@ -230,13 +230,6 @@ class VisualizerWindow(QMainWindow):
         menu_file.addAction(action)
         self.addAction(action)
 
-        action = QAction('Replan', self)
-        action.setShortcut('Ctrl+R+P')
-        action.setStatusTip('Replans from the current location')
-        action.triggered.connect(lambda: self.replan())             
-        menu_file.addAction(action)
-        self.addAction(action)
-
         action = QAction('Settings', self)
         action.setShortcut('Ctrl+C')
         action.setStatusTip('Show a window to change the settings')
@@ -428,27 +421,13 @@ class VisualizerWindow(QMainWindow):
 
     def load_instance(self):
         file_name = self._file_dialog.selectedFiles()[0]
-        self._model.add_instance_file(file_name)
         return self._asp_parser.load_instance(file_name)
 
     def load_answer(self):
-        file_name = self._file_dialog.selectedFiles()[0]
-        self._model.add_plan_file(file_name)
-        with open(file_name, "r") as instance_file:
-            all_lines = instance_file.readlines()
-            if "%Map:" in all_lines[0]:
-                map_path = all_lines[0].split()[1]
-                self._model._map_path = map_path
-                
+        file_name = self._file_dialog.selectedFiles()[0]        
         return self._asp_parser.parse_file(file_name,
                         clear = False, clear_actions = True)
     def load_answer_from_provided_file(self, file_name):
-        self._model.add_plan_file(file_name)
-        with open(file_name, "r") as instance_file:
-            all_lines = instance_file.readlines()
-            if "%Map:" in all_lines[0]:
-                map_path = all_lines[0].split()[1]
-                self._model._map_path = map_path
         return self._asp_parser.parse_file(file_name,
                         clear = True, clear_actions = False)
     def save_instance(self):
@@ -459,71 +438,6 @@ class VisualizerWindow(QMainWindow):
         file_name = self._file_dialog.selectedFiles()[0]
         self._model.save_answer_to_file(file_name)
 
-    def replan(self):
-        #A file is chosen, .map.ecbs format
-        #file_name = self._file_dialog.selectedFiles()[0]
-        #Retrieving the map file name, .map extension
-        #map_file_name = os.path.splitext(file_name)[0]
-        
-        map_file_name = os.path.splitext(self._model._map_path)[0]
-        #Generating instance file name 
-        instance_file_name = os.path.splitext(self._model.get_last_plan_file())[0] +"-instance"+ ".txt"
-        #Generating plan file name
-        plan_file_name = os.path.splitext(self._model.get_last_plan_file())[0] +"-plan"+ ".txt"
-
-        self._model.save_to_file(instance_file_name) 
-        self._model.save_pending_answer_to_file(plan_file_name)
-        scene_file_name = convert(instance_file_name, plan_file_name, map_file_name,2)
-        current_plan_file_name = self._model.get_last_plan_file()
-        new_cost = 0
-        with open(plan_file_name, "r") as plan_file_reader:
-            all_lines = plan_file_reader.readlines()
-            for line in all_lines:
-                if "move" in line:
-                    new_cost += 1
-        all_constraints = []
-        with open(current_plan_file_name,"r") as current_plan_file_reader:
-            all_lines = current_plan_file_reader.readlines()
-            for line in all_lines:
-                if "Constraints:" in line:
-                    line = line.split()
-                    line.pop(0)
-                    if(len(line) > 0):
-                        for i in range(len(line)):
-                            individual_constraint = line[i]
-                            individual_constraint = individual_constraint.replace('(','')
-                            individual_constraint = individual_constraint.replace(')','')
-                            individual_constraint = individual_constraint.split(",")
-                            #individual_constraint.append(re.sub(r'[\[\]\(\), ]', '', line[i]))
-                            constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
-                            all_constraints.append(constraint_tuple)
-        temp=init(map_file_name+".ecbs", scene_file_name, 2, all_constraints)
-        solution_file_name = os.path.splitext(current_plan_file_name)[0] + "-solution.txt"
-        with open(solution_file_name, "w") as backend_solution:
-            backend_solution.write(temp)
-        new_plan_file_name = convert_solution_to_plan(solution_file_name, 2)
-        lines = []
-        with open(current_plan_file_name,"r") as current_plan_reader:
-            lines = current_plan_reader.readlines()
-        with open(current_plan_file_name,"w") as current_plan_writer:
-            for line in lines:
-                if "highway" in line or "node" in line or "%" in line:
-                        current_plan_writer.write(line)
-                if "init" in line and "robot" in line:
-                        current_plan_writer.write(line)
-                if "occurs" in line and "move" in line:
-                        result = [int(d) for d in re.findall(r'-?\d+', line)]
-                        if(result[len(result) - 1] < self._model.get_current_step()):
-                            current_plan_writer.write(line)
-            with open(new_plan_file_name,"r") as new_plan_reader:
-                all_lines = new_plan_reader.readlines()
-                for line in all_lines:
-                    if "occurs" in line and "move" in line and "robot" in line:
-                        line_split = re.split("\(|\,|\)",line)
-                        line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + self._model.get_current_step())+").\n"
-                        current_plan_writer.write(line_final)
-        print(temp)         
-        return self.load_answer_from_provided_file(current_plan_file_name)
     def create_all_pictures(self):
         directory = str(QFileDialog.getExistingDirectory(self, 'Select directory'))
         if directory is None or len(directory) == 0: 

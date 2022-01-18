@@ -49,7 +49,7 @@ class ModelView(QGraphicsView):
         self._menu = QMenu()
         self._menu.setParent(self)
         self.setToolTip('tooltip')
-
+    #Occurs on right click
     def contextMenuEvent(self, event):
         if self._model == None:
             return
@@ -65,7 +65,7 @@ class ModelView(QGraphicsView):
             return 
 
         self._menu.clear()
-
+        #If the current grid cell is a node, allow user to disable node. If the cell is not a node, allow user to remove obstacle and make it a highway/make it a node
         if self._model.is_node(x,y):
             action = QAction('disable node', self)
             action.setShortcut('Ctrl + N')
@@ -85,7 +85,7 @@ class ModelView(QGraphicsView):
             action.triggered.connect(lambda: self._remove_obstacle(x, y))
             self._menu.addAction(action) 
 
-
+        #If the cell is a highway, allow user to remove the highway and make it a node or add an obstacle
         if self._model.is_highway(x,y):
             action = QAction('remove highway', self)
             action.setShortcut('Ctrl + H')
@@ -97,7 +97,7 @@ class ModelView(QGraphicsView):
             action.setStatusTip('Adds an obstacle in the path.')
             action.triggered.connect(lambda: self._add_obstacle(x,y))
             self._menu.addAction(action)  
-                           
+        
         elif self._model.is_node(x,y):
             action = QAction('add highway', self)
             action.setShortcut('Ctrl + H')
@@ -215,11 +215,12 @@ class ModelView(QGraphicsView):
         robot.set_carries(shelf)
         self._menu.hide()
         self._model.update_windows()
-
+    
     def _add_highway(self, x, y):
         self._model.add_highway(x, y)
         self._menu.hide()
         self._model.update_windows()
+    #Making the cell a highway from a non-node
     def _remove_obstacle(self, x, y):
         self._model.add_node(x, y)
         self._model.add_highway(x, y)
@@ -229,6 +230,7 @@ class ModelView(QGraphicsView):
         self._model.remove_highway(x, y)
         self._menu.hide()
         self._model.update_windows()
+    #Making a cell a non-node from a highway
     def _add_obstacle(self, x, y):
         self._model.remove_highway(x, y)
         self._model.remove_node(x, y)

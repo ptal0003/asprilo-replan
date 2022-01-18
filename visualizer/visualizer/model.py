@@ -1,3 +1,4 @@
+from time import time
 from .visualizerItem import *
 from .visualizerGraphicItem import *
 from .modelView import ModelView
@@ -6,7 +7,6 @@ class Model(object):
     def __init__(self):
         self._windows = []
         self._sockets = []
-        self._map_path = ""
         self._items = {}
         self._graphic_items = {}
         self._new_items = {}
@@ -31,13 +31,11 @@ class Model(object):
         self.plan_files_loaded = []
         self.agent_count = 0
     def clear(self, clear_path = True):
-        print(clear_path)
         for window in self._windows:
             if isinstance(window, ModelView):
                 window.clear()
         self._graphic_items = {}
         self._items = {}
-        self._map_path = ""
         self._new_items = {}
         self._editable = True
         self.agent_count = 0
@@ -45,8 +43,6 @@ class Model(object):
         self._nodes = []                #pairs of x and y
         self._blocked_nodes = [(1,1)]   #pairs of x and y
         self._highways = []             #pairs of x and y
-        self.instance_files_loaded = []
-        self.plan_files_loaded = []
         self._inits = []                #list of unhandled inits
         self._num_steps = 0
         self._current_step = 0
@@ -85,14 +81,6 @@ class Model(object):
         return self.init_agent_locations
     def is_time_step_provided(self):
         return self.time_step_provided
-    def add_instance_file(self, file_name):
-        self.instance_files_loaded.append(file_name)
-    def add_plan_file(self, file_name):
-        self.plan_files_loaded.append(file_name)
-    def get_last_plan_file(self):
-        return self.plan_files_loaded[-1]
-    def get_last_instance_file(self):
-        return self.instance_files_loaded[-1]
     def _add_item2(self, item):
         if item is None:
             return
@@ -530,6 +518,7 @@ class Model(object):
             ofile.write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
             ofile.write('\n%Grid size X: ' + str(self._grid_size[0]))
             ofile.write('\n%Grid size Y: ' + str(self._grid_size[1]))
+            #Stores time step additionally when saving instance file, this is to ensure that the instance/plan can be reloaded right from where the user left
             ofile.write('\n%Time Step: ' + str(self.get_current_step()))
             ofile.write('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
             #body
@@ -659,29 +648,27 @@ class Model(object):
         return self._map_kind_to_dictionarie(item.get_kind_name(), 
                                                 dictionarie, 
                                                 create_dictionarie)
+    #Takes coordinates on the grid as input and gives information about robots at the cell
     def get_robot_info_at_node(self, x, y):
         output_str = ''
-        node_occurrences_in_agent_paths = []
+        #List of robots passing x,y along with the time step at which they are at x,y
         robots_passing = []
+        #Iterating through the array containing the path for each agent and checking if the node is in the path of the robot
         for i in range(self.agent_count):
             for j in range(len(self.agent_locations_sorted[i])):
                 if self.agent_locations_sorted[i][j] == (x,y):
-                    if self.agent_locations_sorted[i].count((x,y)) < 2:
-                        robots_passing.append((i+1,j))
+                    robots_passing.append((i+1,j))
+        #Concatenating the output string containing information about all the robots passing (x,y)        
         for i in range(len(robots_passing)):
             output_str += "\nRobot " + str(robots_passing[i][0]) + " passes at " + str(robots_passing[i][1])
+        #Iterating through all the agents and checking if any two consecutive locations are the same, if so, that means the agent is waiting at the node x,y
         for i in range(self.agent_count):
             counter = 0
             flag = False
-            
-            for location in self.agent_locations_sorted[i]:
-                if location[0] == x and location[1] == y:
-                    if not flag:
-                        counter += 1
-                    if counter >= 2 and not flag:
-                       flag = True
-                       time_step = self.agent_locations_sorted[i].index(location)
-                       output_str += "\nRobot " + str(i+1) + " waiting" + " at time step " + str(time_step)    
+            for time_step in range(len(self.agent_locations_sorted[i]) - 1 ):
+                current_time_step_location = self.agent_locations_sorted[i][time_step]
+                next_time_step_location = self.agent_locations_sorted[i][time_step + 1]
+                if current_time_step_location[0] == x and current_time_step_location[1] == y and current_time_step_location == next_time_step_location:
+                    output_str += "\nRobot " + str(i+1) + " waiting" + " at time step " + str(time_step)    
 
-            node_occurrences_in_agent_paths.append(counter)
         return output_str

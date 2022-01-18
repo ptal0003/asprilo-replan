@@ -27,7 +27,6 @@ class VisualizerSocket(object):
         self._parser = parser
 
     def run_script(self, command, port = None):
-        print("Line29")
         self.close()
         self._thread = Thread(target = lambda: os.system(command))
         self._thread.start()
@@ -35,13 +34,11 @@ class VisualizerSocket(object):
             self.connect('127.0.0.1', port)
 
     def join(self, wait_time):
-        print("Line37")
         if self._thread is not None:
             self._thread.join(wait_time)
             self._thread = None
 
     def run_connection(self):
-        print("Line43")
         if self._s is None:
             return
         if self._timer is not None:
@@ -49,11 +46,10 @@ class VisualizerSocket(object):
         self._timer = QTimer()
         
         self._timer.timeout.connect(self.receive)
-        print("Running connection")
+        
         self._timer.start(1000)
 
     def connect(self, host = None, port = None):
-        print("Line55") 
         if self.is_connected() and host == self._host and port == self._port:
             return 0
         if host is not None:
@@ -82,7 +78,6 @@ class VisualizerSocket(object):
         return 0
 
     def send(self, msg):
-        print("line 85")
         if self._s is None or msg is None:
             return
         if msg == '':
@@ -91,7 +86,6 @@ class VisualizerSocket(object):
         pass
 
     def done_step(self, step):
-        print("Line93") 
         if self._s is None:
             return
         self._waiting = True
@@ -101,14 +95,12 @@ class VisualizerSocket(object):
         pass
 
     def _receive_data(self):
-        print("Line103") 
         breakLoop = False                                  
         data = ''
         try:
             ready = select.select([self._s], [], [], 0.1)
             while (not breakLoop) and ready[0]:
                 new_data = self._s.recv(2048).decode()
-                print(new_data + "line 110 of network.py")
                 if not new_data.find('\n') == -1 or new_data == '':
                     breakLoop = True
                 data += new_data
@@ -116,7 +108,6 @@ class VisualizerSocket(object):
                 self.close()
                 return None
             
-            print("Line 118 of network.py")
         except socket.error as err:
             print(err)
         return data
@@ -197,7 +188,6 @@ class SolverSocket(VisualizerSocket):
         self._model.update_windows()
 
     def solve(self):
-        print("line188")
         if self._s == None or self._model == None: return -1
         self._s.send('%$RESET.'.encode('utf-8'))
         self._model.set_editable(False)
@@ -235,7 +225,6 @@ class SimulatorSocket(VisualizerSocket):
             return -1
         
         data = self._receive_data()
-        print(data + "line 220")
         empty = True
         reset = False
         if data is None:
