@@ -50,3 +50,19 @@ The following flow chart shows how the entire process of interacting with lazycb
   ![image](https://user-images.githubusercontent.com/62492172/148785076-45145e78-3774-46b1-8320-12e1b5929e6d.png)
 
 In the image, lazycbs can be replaced with any other solver. Asprilo and the solver can only pass data to one another using sockets. However, the method to connect Asprilo and the solver has to be written separately for each solver. 
+ 
+**13th January 2022 to 20th January 2022**
+- Saving the time step in the instance file 
+     * save_to_file() https://github.com/ptal0003/asprilo-replan/blob/dd0d2a428390fa16617096b324d5afb1aef35508/visualizer/visualizer/model.py#L514 was modified to          add as a comment each time the instance was saved
+- Set the time step being visualized based on the data in the instance file.
+     * https://github.com/ptal0003/asprilo-replan/blob/dd0d2a428390fa16617096b324d5afb1aef35508/visualizer/visualizer/parser.py#L278 checks the loaded file for the        presence of a time step, if a time step is found, https://github.com/ptal0003/asprilo-replan/blob/dd0d2a428390fa16617096b324d5afb1aef35508/visualizer/visualizer/model.py#L62 and https://github.com/ptal0003/asprilo-replan/blob/dd0d2a428390fa16617096b324d5afb1aef35508/visualizer/visualizer/model.py#L140 are called
+- Storing the locations and movements of all agents at all time steps
+     * Parser.py is responsible for storing the locations and movements.
+     * When the solving is complete, on_model is called as a callback method. This method invokes on_atom() for all the atoms, depending on the type of atom,              on_init_atom() or on_occurs_atom() are called. If on_init_atom is called, the starting locations of all agents are stored in the format (ID,                        (starting_x,starting_y)), however if on_occurs_atom is called, movements of all agents are stored along with their ID and time step in the format                    (ID,(dx,dy),time_step).
+ - Sorting locations of all agents according to time step and ID is done at https://github.com/ptal0003/asprilo-replan/blob/dd0d2a428390fa16617096b324d5afb1aef35508/visualizer/visualizer/parser.py#L63
+- Displaying the information at each node: 
+     * https://github.com/ptal0003/asprilo-replan/blob/dd0d2a428390fa16617096b324d5afb1aef35508/visualizer/visualizer/model.py#L652 accepts the coordinates of the          node, iterates through the location of all agents, finds if the robots pass/wait at the node(x,y), create a relevant string and return it.
+     * Displaying the information on hover is done at: https://github.com/ptal0003/asprilo-replan/blob/dd0d2a428390fa16617096b324d5afb1aef35508/visualizer/visualizer/modelView.py#L205
+ 
+ 
+
