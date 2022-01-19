@@ -314,21 +314,17 @@ class AspParser(object):
             print("Nothing will be cleared as time step is provided in instance")
         else:
             if clear:
-                print("Clear true\n")
                 self.reset_programs()
                 self.clear_model()
 
             if clear_actions:
-                print("Clear actions true\n")
                 self.reset_programs()
                 self.clear_model_actions()
 
             if (clear or clear_actions) and self._model_view is not None:
-                print("Line 234 if statement")
                 self._model_view.stop_timer()
 
             if clear_grounder:
-                print("Line 238 if statement")
                 self.reset_grounder()
         #Loading the file into the parser, the time step(If provided) is set in this function
         if self.load(file_name) < 0:

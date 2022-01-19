@@ -76,12 +76,10 @@ class Solver(object):
         self._port = self._args.port
 
     def __del__(self):
-        print("Solver.py 78")
         self.close()
 
     #return the solver mode
     def get_mode(self):
-        print("Solver.py 83")
         return self._args.mode
 
     #open the socket and wait for an incomming connection
@@ -110,7 +108,6 @@ class Solver(object):
 
     #close the connection and the socket
     def close(self):
-        print("Solver.py 112")
         if self._connection is not None:
             try:
                 self._connection.shutdown(socket.SHUT_RDWR)
@@ -130,7 +127,6 @@ class Solver(object):
 
     #checks whether data can be read from the socket
     def is_ready_to_read(self, time_out = 0.1):
-        print("Solver.py 132")
         if self._connection is None:
             return False
         ready = select.select([self._connection], [], [], time_out)
@@ -141,14 +137,13 @@ class Solver(object):
 
     #sends data to the visualizer
     def send(self, data):
-        print("Solver.py 143")
         if self._connection is None:
             return
         self._connection.send(data.encode())
 
     #receive data from the visualizer
     def receive(self, time_out):
-        print("Solver.py 150")
+
         if self._connection is None:
             return -1
         try:
@@ -178,7 +173,6 @@ class Solver(object):
     #process the raw data received by the receive function
     #primally splits data in seperate control symbols and asp atoms
     def on_raw_data(self, raw_data):
-        print("Solver.py 179")
         #the visualizer seperates every atom and control symbol with the '.' character
         data = raw_data.split('.')
         for atom in data:
@@ -199,7 +193,6 @@ class Solver(object):
 
     #process received control symbols
     def on_control_symbol(self, symbol):
-        print("Solver.py 201")
         if symbol.name == 'reset':
             #resets the solver to receive a new instance and discard old data
             #the visualizer will send this symbol when it is sending a new instance afterwards
@@ -290,7 +283,6 @@ class Solver(object):
 
     #solver main function
     def run(self):
-        print("Solver.py 290")
         print('Start ' + self._name)
         self.connect()
         #loop to receive data
@@ -388,7 +380,6 @@ class SolverInt(SolverInc):
 
     #model callback for self._control.solve in self.solve
     def on_model(self, model):
-        print('found solution')
         #clear self._so_send
         self._to_send = {}
         #append all occurs atoms to the self._to_send dictonary
@@ -421,7 +412,6 @@ class Solverlazycbs(Solver):
         self.number_of_robots = 0
     # handels the asp atoms
     def on_data(self, data):
-        print("Solver.py 420")
         # # create asp file to translate
         # with open('viz_instance2solve.lp', 'w') as f:
         #     for atom in data:
@@ -500,7 +490,9 @@ class Solverlazycbs(Solver):
                             individual_constraint = individual_constraint.split(",")
                             constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
                             all_constraints.append(constraint_tuple)
+        
         temp=init("../lazycbs-generated-instances-and-plans/map.ecbs",scene_file_name, 2, all_constraints)
+        print(temp)
         temp = temp.split("\n")
         new_plan_file_name = convert_solution_to_plan(temp, 2)
         lines = []
@@ -515,7 +507,6 @@ class Solverlazycbs(Solver):
             lines = current_instance_reader.readlines()
         with open(final_instance,"w") as current_instance_writer:
             for line in lines:
-                print(line)
                 current_instance_writer.write(line)
             
             with open(final_plan,"w") as current_plan_writer:
@@ -547,7 +538,6 @@ class Solverlazycbs(Solver):
         
 #main
 def main():
-    print("MAIN")
     solver = Solverlazycbs()
     mode = solver.get_mode()
     #choose solver mode
