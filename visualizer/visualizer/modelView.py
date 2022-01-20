@@ -381,7 +381,7 @@ class ModelView(QGraphicsView):
             self._scene.removeItem(item)
         self._items_in_scene = []
 
-    def update(self):
+    def update(self, show_constraints = False):
         if self._model == None: 
             return 0
         self._line_hlength = (self._w_distance) * self._model.get_grid_size()[0] + self._border_size
@@ -400,6 +400,8 @@ class ModelView(QGraphicsView):
         pen.setWidth(self._border_size)
         brush_disabled_node = QBrush(QColor(config.get('color', 'color_disabled_node')))
         brush_highway = QBrush(QColor(config.get('color', 'color_highway')))
+        brush_vertex_constraints = QBrush(QColor(255,0,0))
+        brush_edge_constraints = QBrush(QColor(0,255,0))
 
         self.clear()
 

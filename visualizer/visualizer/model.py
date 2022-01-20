@@ -30,7 +30,9 @@ class Model(object):
         self.instance_files_loaded = []
         self.plan_files_loaded = []
         self.agent_count = 0
-    def clear(self, clear_path = True):
+        self.vertex_constraints = []
+        self.edge_constraints = []
+    def clear(self):
         for window in self._windows:
             if isinstance(window, ModelView):
                 window.clear()
@@ -53,10 +55,20 @@ class Model(object):
         self.agent_locations_sorted = []
         self.instance_loaded = False
         self.time_step_provided = False
+        self.vertex_constraints = []
+        self.edge_constraints = []
         self.update_windows()
     
     def set_instance_loaded(self,loaded):
         self.instance_loaded = loaded
+    def set_vertex_constraints(self,new_vertex_constraints):
+        self.vertex_constraints = new_vertex_constraints
+    def set_edge_constraints(self,new_edge_constraints):
+        self.edge_constraints = new_edge_constraints
+    def get_vertex_constraints(self):
+        return self.vertex_constraints
+    def get_edge_constraints(self):
+        return self.edge_constraints
     def is_instance_loaded(self):
         return self.instance_loaded
     def set_time_step_provided(self,provided):
@@ -672,3 +684,21 @@ class Model(object):
                     output_str += "\nRobot " + str(i+1) + " waiting" + " at time step " + str(time_step)    
 
         return output_str
+    def process_new_constraints(self, new_vertex_constraints, new_edge_constraints, existing_vertex_constraints, existing_edge_constraints, time_step):
+        updated_vertex_constraints = []
+        updated_edge_constraints = []
+        for vertex_constraint in existing_vertex_constraints:
+            if vertex_constraint[2] < time_step:
+                updated_vertex_constraints.append(vertex_constraint)
+
+        for vertex_constraint in new_vertex_constraints:
+            updated_vertex_constraints.append(vertex_constraint)   
+
+        for edge_constraint in existing_edge_constraints:
+            if edge_constraint[3] < time_step:
+                updated_vertex_constraints.append(vertex_constraint)
+
+        for edge_constraint in new_edge_constraints:
+            updated_vertex_constraints.append(vertex_constraint)   
+        self.set_vertex_constraints(updated_vertex_constraints)
+        self.set_edge_constraints(updated_edge_constraints)

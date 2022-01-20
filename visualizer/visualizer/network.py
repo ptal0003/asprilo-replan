@@ -174,7 +174,26 @@ class SolverSocket(VisualizerSocket):
             line_split = data.split()
             new_plan_file = line_split[1]
             new_instance_file = line_split[2]
-            self._model.clear(False)
+            time_step = int(line_split[3])
+            existing_edge_constraints = self._model.get_edge_constraints()
+            existing_vertex_constraints = self._model.get_vertex_constraints()
+            new_edge_constraints = []
+            new_vertex_constraints = []
+            for i in range(5, len(line_split)):
+                constraint_split = line_split[i].replace(")",",")
+                constraint_split = constraint_split.replace("(",",")
+                constraint_split = constraint_split.replace("[",",")
+                constraint_split = constraint_split.replace("]",",")
+                constraint_split = constraint_split.split(",")
+                if (int(constraint_split[2]) > 0 and int(constraint_split[3]) > 0) and not (int(constraint_split[6]) > 0 and int(constraint_split[7]) > 0):
+                    new_vertex_constraints.append(((int(constraint_split[3]) + 1,int(constraint_split[2]) + 1), int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
+                elif (int(constraint_split[6]) > 0 and int(constraint_split[7]) > 0) and not (int(constraint_split[2]) > 0 and int(constraint_split[3]) > 0):
+                    new_vertex_constraints.append(((int(constraint_split[7]) + 1,int(constraint_split[6]) + 1), int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
+                elif (int(constraint_split[6]) > 0 and int(constraint_split[7]) > 0) and (int(constraint_split[2]) > 0 and int(constraint_split[3]) > 0):
+                    new_vertex_constraints.append((  (int(constraint_split[3]) + 1,int(constraint_split[2]) + 1) ,(int(constraint_split[7]) + 1,int(constraint_split[6]) + 1) , int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
+
+            self._model.clear()
+            self._model.process_new_constraints(new_vertex_constraints,new_edge_constraints,existing_vertex_constraints,existing_edge_constraints,time_step)
             self._parser.parse_file(new_instance_file,clear = True, clear_actions = True)
             self._parser.parse_file(new_plan_file,clear = True, clear_actions = True)
             return

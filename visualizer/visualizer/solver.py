@@ -492,7 +492,12 @@ class Solverlazycbs(Solver):
                             all_constraints.append(constraint_tuple)
         
         temp=init("../lazycbs-generated-instances-and-plans/map.ecbs",scene_file_name, 2, all_constraints)
-        print(temp)
+        constraint_line = ""
+        for line in temp:
+            if "Constraints" in line:
+                line_split = line.split()
+                if len(line_split) > 1:
+                    constraint_line = line
         temp = temp.split("\n")
         new_plan_file_name = convert_solution_to_plan(temp, 2)
         lines = []
@@ -527,7 +532,10 @@ class Solverlazycbs(Solver):
                             line_split = re.split("\(|\,|\)",line)
                             line_final = "occurs(object(robot,"+line_split[3]+"),action(move,("+line_split[8]+", "+line_split[9]+")),"+str(int(line_split[12]) + int(self.time_step))+").\n"
                             current_plan_writer.write(line_final)
-        self.send("%$COMPLETE " + final_plan  +" "+final_instance+" \n")
+        if constraint_line != '':
+            self.send("%$COMPLETE " + final_plan  +" "+final_instance + " "+ str(self.time_step) +" " +constraint_line+" \n")
+        else:
+            self.send("%$COMPLETE " + final_plan  +" "+final_instance+" "+str(self.time_step)+" \n")
 
         os.remove("../lazycbs-generated-instances-and-plans/remaining-plan.lp")
         os.remove("../lazycbs-generated-instances-and-plans/complete-plan.lp")
