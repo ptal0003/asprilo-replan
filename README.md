@@ -6,6 +6,16 @@ This is source tree of **ASPRILO**, an intra-logistics benchmark suite for answe
 programming. For further details, please consult the documentation on our website at
 <https://asprilo.github.io/>.
 
+## Changes to dependencies:
+- Deactivate the conda environment by running "conda deactivate"
+- Run the following commands:
+   - sudo apt install pip
+   - pip install pybind11
+   - sudo apt install python-is-python3
+   - python3 -m pip install --user --upgrade clingo
+   - sudo apt-get install python3-pyqt5
+
+The reason behind not running asprilo through the conda environment is that pybind11 does not work with conda and fails to detect the module lazycbs which is present as a .so file.
 
 ## Directory Structure
 
