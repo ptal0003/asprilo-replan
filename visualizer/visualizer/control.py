@@ -279,6 +279,7 @@ class VisualizerWindow(QMainWindow):
         menu_solver.addAction(action)
         self.addAction(action)
 
+            
         action = QAction('Fast Simulate', self)
         action.setShortcut('Ctrl+D')
         action.setStatusTip('Connect the visualizer to a simulator and start simulating')
@@ -316,7 +317,7 @@ class VisualizerWindow(QMainWindow):
             action.triggered.connect(lambda: self.switch_widget(self._product_window))
             menu_windows.addAction(action)
             self.addAction(action)
-
+        
         if ll_config.get('features', 'tasks'):
             action = QAction('Tasks', self)
             action.setShortcut('Ctrl+T')
@@ -330,6 +331,8 @@ class VisualizerWindow(QMainWindow):
         action.setStatusTip('Show a window to control the visualizer')
         action.triggered.connect(lambda: self.switch_widget(self._control_splitter))
         menu_windows.addAction(action)
+
+        
 
         action = QAction('Grid size', self)
         action.setShortcut('Ctrl+G')
@@ -348,6 +351,13 @@ class VisualizerWindow(QMainWindow):
         action.setShortcut('Ctrl+W')
         action.setStatusTip('Show a window to enable and disable path drawing')
         action.triggered.connect(self._enable_path_widget.show)
+        menu_windows.addAction(action)
+        self.addAction(action)
+
+        action = QAction('Show Constraints', self)
+        action.setShortcut('Ctrl+S+C')
+        action.setStatusTip('Show constraints')
+        action.triggered.connect(self.make_constraints_visible)
         menu_windows.addAction(action)
         self.addAction(action)
 
@@ -461,7 +471,8 @@ class VisualizerWindow(QMainWindow):
         if server_socket.script_is_running():
             dialog.set_address(server_socket.get_host(), server_socket.get_port())
         dialog.on_ok()
-
+    def make_constraints_visible(self):
+        self._model_view.update(True)
     def exit(self):
         self._solver_socket.close()
         self._simulator_socket.close()

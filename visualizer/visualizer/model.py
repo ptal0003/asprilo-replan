@@ -696,9 +696,10 @@ class Model(object):
 
         for edge_constraint in existing_edge_constraints:
             if edge_constraint[3] < time_step:
-                updated_vertex_constraints.append(vertex_constraint)
+                updated_edge_constraints.append(vertex_constraint)
 
         for edge_constraint in new_edge_constraints:
-            updated_vertex_constraints.append(vertex_constraint)   
-        self.set_vertex_constraints(updated_vertex_constraints)
-        self.set_edge_constraints(updated_edge_constraints)
+            updated_edge_constraints.append(vertex_constraint)
+        print(updated_vertex_constraints)   
+        self.vertex_constraints = updated_vertex_constraints
+        self.edge_constraints = updated_edge_constraints

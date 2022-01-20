@@ -493,12 +493,12 @@ class Solverlazycbs(Solver):
         
         temp=init("../lazycbs-generated-instances-and-plans/map.ecbs",scene_file_name, 2, all_constraints)
         constraint_line = ""
+        temp = temp.split("\n")
         for line in temp:
             if "Constraints" in line:
                 line_split = line.split()
                 if len(line_split) > 1:
                     constraint_line = line
-        temp = temp.split("\n")
         new_plan_file_name = convert_solution_to_plan(temp, 2)
         lines = []
         

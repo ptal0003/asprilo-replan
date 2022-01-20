@@ -440,7 +440,38 @@ class ModelView(QGraphicsView):
                                         self._h_distance*self._scaling, 
                                         pen, brush_highway)
             self._items_in_scene.append(rect)
+        #draw constraints
+        if show_constraints:
+            print(self._model.get_vertex_constraints())
+            for constraint in self._model.get_vertex_constraints():
+                xPos = (constraint[0][0]-1) * self._w_distance
+                yPos = (constraint[0][1]-1) * self._h_distance
+                rect = self._scene.addRect(xPos*self._scaling, 
+                                            yPos*self._scaling, 
+                                            self._w_distance*self._scaling, 
+                                            self._h_distance*self._scaling, 
+                                            pen, brush_vertex_constraints)
+                self._items_in_scene.append(rect)
 
+            for constraint in self._model.get_edge_constraints():
+                xPos = (constraint[0][0]-1) * self._w_distance
+                yPos = (constraint[0][1]-1) * self._h_distance
+                rect1 = self._scene.addRect(xPos*self._scaling, 
+                                            yPos*self._scaling, 
+                                            self._w_distance*self._scaling, 
+                                            self._h_distance*self._scaling, 
+                                            pen, brush_vertex_constraints)
+                xPos = (constraint[1][0]-1) * self._w_distance
+                yPos = (constraint[1][1]-1) * self._h_distance
+                rect2 = self._scene.addRect(xPos*self._scaling, 
+                                            yPos*self._scaling, 
+                                            self._w_distance*self._scaling, 
+                                            self._h_distance*self._scaling, 
+                                            pen, brush_vertex_constraints)
+                self._items_in_scene.append(rect1)
+                self._items_in_scene.append(rect2)
+
+        
         #draw items
         for item_dic in self._model.iterate_graphic_dictionaries():
             count = len(item_dic)

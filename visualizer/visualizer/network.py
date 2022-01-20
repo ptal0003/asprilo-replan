@@ -186,12 +186,14 @@ class SolverSocket(VisualizerSocket):
                 constraint_split = constraint_split.replace("]",",")
                 constraint_split = constraint_split.split(",")
                 if (int(constraint_split[2]) > 0 and int(constraint_split[3]) > 0) and not (int(constraint_split[6]) > 0 and int(constraint_split[7]) > 0):
+                    print("190")
                     new_vertex_constraints.append(((int(constraint_split[3]) + 1,int(constraint_split[2]) + 1), int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
                 elif (int(constraint_split[6]) > 0 and int(constraint_split[7]) > 0) and not (int(constraint_split[2]) > 0 and int(constraint_split[3]) > 0):
+                    print("193")
                     new_vertex_constraints.append(((int(constraint_split[7]) + 1,int(constraint_split[6]) + 1), int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
                 elif (int(constraint_split[6]) > 0 and int(constraint_split[7]) > 0) and (int(constraint_split[2]) > 0 and int(constraint_split[3]) > 0):
+                    print("196")
                     new_vertex_constraints.append((  (int(constraint_split[3]) + 1,int(constraint_split[2]) + 1) ,(int(constraint_split[7]) + 1,int(constraint_split[6]) + 1) , int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
-
             self._model.clear()
             self._model.process_new_constraints(new_vertex_constraints,new_edge_constraints,existing_vertex_constraints,existing_edge_constraints,time_step)
             self._parser.parse_file(new_instance_file,clear = True, clear_actions = True)
