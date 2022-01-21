@@ -201,7 +201,7 @@ class ModelView(QGraphicsView):
                 self.setToolTip('Obstacle')
                 return super(self.__class__, self).event(event)
             if self._model.is_highway(pos[0],pos[1]) and self._model.is_node(pos[0],pos[1]):
-                ss = 'Highway(' + str(self._model.get_node_id(pos)) +') at ' + str(pos)  
+                ss = 'Highway(' + str(self._model.get_node_id(pos)) +') at ' + str(pos)
                 ss += self._model.get_robot_info_at_node(pos[0],pos[1])
             elif not self._model.is_highway(pos[0],pos[1]) and self._model.is_node(pos[0],pos[1]):
                 ss = 'node(' + str(self._model.get_node_id(pos)) +') at ' + str(pos)     
@@ -442,7 +442,6 @@ class ModelView(QGraphicsView):
             self._items_in_scene.append(rect)
         #draw constraints
         if show_constraints:
-            print(self._model.get_vertex_constraints())
             for constraint in self._model.get_vertex_constraints():
                 xPos = (constraint[0][0]-1) * self._w_distance
                 yPos = (constraint[0][1]-1) * self._h_distance
