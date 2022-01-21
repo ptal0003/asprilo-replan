@@ -679,6 +679,11 @@ class Model(object):
             print(constraint)
             if constraint[0][0] == x and constraint[0][1] == y:
                 output_str += "\nRobot " + str(constraint[1]) + " cannot be at (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") at time step " + str(constraint[2])
+        
+        for constraint in self.get_edge_constraints():
+            if (constraint[0][0] == x and constraint[0][1] == y) or (constraint[1][0] == x and constraint[1][1] == y):
+                output_str += "\nRobot " + str(constraint[1]) + " cannot travel from (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") to "+"("+str(constraint[1][0]) + "," + str(constraint[1][1]) + ")"+" at time step " + str(constraint[2])
+        
         return output_str
     def process_new_constraints(self, new_vertex_constraints, new_edge_constraints, existing_vertex_constraints, existing_edge_constraints, time_step):
         updated_vertex_constraints = []
