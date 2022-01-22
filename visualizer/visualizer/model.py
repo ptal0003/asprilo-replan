@@ -532,30 +532,6 @@ class Model(object):
             ofile.write('\n%Grid size Y: ' + str(self._grid_size[1]))
             #Stores time step additionally when saving instance file, this is to ensure that the instance/plan can be reloaded right from where the user left
             ofile.write('\n%Time Step: ' + str(self.get_current_step()))
-            all_constraints_line = "\n%"
-            if len(self.vertex_constraints) > 0 or len(self.edge_constraints):
-                all_constraints_line += "Constraints: "
-            if len(self.vertex_constraints) > 0:
-                for constraint in self.vertex_constraints:
-                    x1 = constraint[0][0] 
-                    y1 = constraint[0][1] 
-                    agent_num = constraint[1] - 1
-                    time_step = constraint[2]
-                    constraint_line = "((" +str(x1)+","+str(y1)+")," +str(agent_num) +"," +str(time_step) + ")"
-                    all_constraints_line += constraint_line + " "
-            if len(self.edge_constraints) > 0:
-                for constraint in self.edge_constraints:
-                    x1 = constraint[0][0] 
-                    y1 = constraint[0][1]
-                    x2 = constraint[1][0] 
-                    y2 = constraint[1][1]
-                     
-                    agent_num = constraint[2] - 1
-                    time_step = constraint[3]
-                    constraint_line = "((" +str(x1)+","+str(y1)+"),("+str(x2) +"," +str(y2) + "),"+str(agent_num) +"," +str(time_step) + ")"
-                    all_constraints_line += constraint_line + " "
-            if len(self.vertex_constraints) > 0 or len(self.edge_constraints):
-                ofile.write(all_constraints_line +" \n")
             ofile.write('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
             #body
             ofile.write('#program base.\n\n')
