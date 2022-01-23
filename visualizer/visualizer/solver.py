@@ -490,9 +490,12 @@ class Solverlazycbs(Solver):
                             individual_constraint = individual_constraint.split(",")
                             constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
                             all_constraints.append(constraint_tuple)
+        #constraint1 = (0,((1,0),(-1,-2)),3,-100)
+        constraint2 = (0,((0,4),(-1,-2)),1,-100)
         
-        temp=init("../lazycbs-generated-instances-and-plans/map.ecbs",scene_file_name, 2, all_constraints)
+        temp=init("../lazycbs-generated-instances-and-plans/map.ecbs",scene_file_name, 2,[constraint2])
         constraint_line = ""
+        print(temp)
         temp = temp.split("\n")
         for line in temp:
             if "Constraints" in line:

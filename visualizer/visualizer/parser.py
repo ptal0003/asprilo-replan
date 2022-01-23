@@ -114,7 +114,7 @@ class AspParser(object):
                 temp_split = temp_str.split(",")
                 new_agent_loc = (current_agent_locs[len(current_agent_locs) - 1][0] + int(temp_split[1]),current_agent_locs[len(current_agent_locs) - 1][1] + int(temp_split[2]))
                 current_agent_locs.append(new_agent_loc)
-            
+            self._model.add_final_location(current_agent_locs[len(current_agent_locs) - 1])
             if (self._model.is_time_step_provided() and self._model.is_instance_loaded()) or not self._model.is_time_step_provided():
                 self._model.add_agent_locations_sorted(current_agent_locs)
             #Turning on the path for each robot by default

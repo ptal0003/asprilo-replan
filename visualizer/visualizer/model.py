@@ -22,6 +22,7 @@ class Model(object):
         self._current_step = 0
 
         self._displayed_steps = -1
+        self.agent_final_locs = []
         self.init_agent_locations = []
         self.all_agent_movements = []
         self.agent_locations_sorted = []
@@ -57,6 +58,7 @@ class Model(object):
         self.time_step_provided = False
         self.vertex_constraints = []
         self.edge_constraints = []
+        self.agent_final_locs = []
         self.update_windows()
     
     def set_instance_loaded(self,loaded):
@@ -69,6 +71,8 @@ class Model(object):
         return self.vertex_constraints
     def get_edge_constraints(self):
         return self.edge_constraints
+    def get_final_locations(self):
+        return self.agent_final_locs
     def is_instance_loaded(self):
         return self.instance_loaded
     def set_time_step_provided(self,provided):
@@ -81,7 +85,8 @@ class Model(object):
         self.init_agent_locations.remove(original_record)
         updated_record = (ID,(int(original_record[1][0]) - dx, int(original_record[1][1]) - dy )  )
         self.init_agent_locations.append(updated_record)
-        
+    def add_final_location(self, location):
+        self.agent_final_locs.append(location)
     def add_agent_movements(self,record):
         self.all_agent_movements.append(record)
     def get_agent_movements(self):

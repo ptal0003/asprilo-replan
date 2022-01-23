@@ -402,7 +402,7 @@ class ModelView(QGraphicsView):
         brush_highway = QBrush(QColor(config.get('color', 'color_highway')))
         brush_vertex_constraints = QBrush(QColor(255,0,0))
         brush_edge_constraints = QBrush(QColor(0,255,0))
-
+        brush_final_locations = QBrush(QColor(238,166,238))
         self.clear()
 
         #draw vertival lines
@@ -440,6 +440,16 @@ class ModelView(QGraphicsView):
                                         self._h_distance*self._scaling, 
                                         pen, brush_highway)
             self._items_in_scene.append(rect)
+        #draw final_locations
+        for node in self._model.get_final_locations():
+            xPos = (node[0]-1) * self._w_distance
+            yPos = (node[1]-1) * self._h_distance
+            rect = self._scene.addRect(xPos*self._scaling, 
+                                        yPos*self._scaling, 
+                                        self._w_distance*self._scaling, 
+                                        self._h_distance*self._scaling, 
+                                        pen, brush_final_locations)
+            self._items_in_scene.append(rect)
         #draw constraints
         if show_constraints:
             for constraint in self._model.get_vertex_constraints():
@@ -466,7 +476,7 @@ class ModelView(QGraphicsView):
                                             yPos*self._scaling, 
                                             self._w_distance*self._scaling, 
                                             self._h_distance*self._scaling, 
-                                            pen, brush_vertex_constraints)
+                                            pen, brush_edge_constraints)
                 self._items_in_scene.append(rect1)
                 self._items_in_scene.append(rect2)
 
