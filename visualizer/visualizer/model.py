@@ -99,6 +99,10 @@ class Model(object):
     def add_agent_locations(self,ID, x, y):
         record = (ID,(x,y))
         self.init_agent_locations.append(record)
+    def add_vertex_constraints(self,constraint):
+        self.vertex_constraints.append(constraint)
+    def add_edge_constraints(self,constraint):
+        self.edge_constraints.append(constraint)
     def get_starting_agent_locs(self):
         return self.init_agent_locations
     def is_time_step_provided(self):

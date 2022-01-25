@@ -475,21 +475,6 @@ class Solverlazycbs(Solver):
             for line in all_lines:
                 if "move" in line:
                     new_cost += 1
-        all_constraints = []
-        with open("../lazycbs-generated-instances-and-plans/remaining-plan.lp","r") as current_plan_file_reader:
-            all_lines = current_plan_file_reader.readlines()
-            for line in all_lines:
-                if "Constraints:" in line:
-                    line = line.split()
-                    line.pop(0)
-                    if(len(line) > 0):
-                        for i in range(len(line)):
-                            individual_constraint = line[i]
-                            individual_constraint = individual_constraint.replace('(','')
-                            individual_constraint = individual_constraint.replace(')','')
-                            individual_constraint = individual_constraint.split(",")
-                            constraint_tuple = (int(individual_constraint[0]),(((int(individual_constraint[1]),int(individual_constraint[2]))),(int(individual_constraint[3]),int(individual_constraint[4]))),int(individual_constraint[5]) - int(self._model.get_current_step()), int(new_cost) )
-                            all_constraints.append(constraint_tuple)
         #constraint1 = (0,((1,0),(-1,-2)),3,-100)
         constraint2 = (0,((0,4),(-1,-2)),1,-100)
         
@@ -510,7 +495,6 @@ class Solverlazycbs(Solver):
         os.mkdir("../lazycbs-generated-instances-and-plans/"+date_and_time)
         final_plan = "../lazycbs-generated-instances-and-plans/"+date_and_time+"/new-plan.lp"
         final_instance = "../lazycbs-generated-instances-and-plans/"+date_and_time+"/current-instance.lp"
-
         with open("../lazycbs-generated-instances-and-plans/current-instance.lp","r") as current_instance_reader:
             lines = current_instance_reader.readlines()
         with open(final_instance,"w") as current_instance_writer:

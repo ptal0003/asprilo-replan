@@ -469,7 +469,7 @@ class ModelView(QGraphicsView):
                                             yPos*self._scaling, 
                                             self._w_distance*self._scaling, 
                                             self._h_distance*self._scaling, 
-                                            pen, brush_vertex_constraints)
+                                            pen, brush_edge_constraints)
                 xPos = (constraint[1][0]-1) * self._w_distance
                 yPos = (constraint[1][1]-1) * self._h_distance
                 rect2 = self._scene.addRect(xPos*self._scaling, 
@@ -483,6 +483,7 @@ class ModelView(QGraphicsView):
         
         #draw items
         for item_dic in self._model.iterate_graphic_dictionaries():
+            print("Drawing items")
             count = len(item_dic)
             number = 1
             for item in item_dic.values():

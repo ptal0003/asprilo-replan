@@ -281,6 +281,36 @@ class AspParser(object):
                     #Setting the time step in the model, so that it knows when to execute the plan from
                     self._model.set_time_step_provided(True)
                     self._model.go_to_time_step(time_step)
+                elif "Vertex Constraints:" in line:
+                    line_split = line.split(" ")
+                    for i in range(2,len(line_split)):
+                        constraint = line_split[i].replace("(",",")
+                        constraint = constraint.replace(")",",")
+                        constraint_split = constraint.split(",")
+                        if len(constraint_split) > 1:
+                            x1 = int(constraint_split[2])
+                            y1 = int(constraint_split[3])
+                            agent_num = int(constraint_split[5])
+                            constraint_time_step = int(constraint_split[6])
+                            constraint = ((x1,y1),agent_num, constraint_time_step)
+                            self._model.add_vertex_constraints(constraint)
+                elif "Edge Constraints:" in line:
+                    line_split = line.split(" ")
+                    for i in range(2,len(line_split)):
+                        constraint = line_split[i].replace("(",",")
+                        constraint = constraint.replace(")",",")
+                        constraint_split = constraint.split(",")
+                        if len(constraint_split) > 1:
+                            print(constraint_split)
+                            x1 = int(constraint_split[2])
+                            y1 = int(constraint_split[3])
+                            x2 = int(constraint_split[6])
+                            y2 = int(constraint_split[7])
+                            
+                            agent_num = int(constraint_split[9])
+                            constraint_time_step = int(constraint_split[10])
+                            constraint = ((x1,y1),(x2,y2),agent_num, constraint_time_step)
+                            self._model.add_edge_constraints(constraint)
             ff.close()
             if self._parser_widget is not None:
                 self._parser_widget.update()
