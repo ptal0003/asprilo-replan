@@ -166,7 +166,7 @@ class VisualizerWindow(QMainWindow):
 
         if self._args.start_solver:
             self._init_solver_dialog.on_ok(None)
-
+        
         if self._args.start_simulator:
             self._init_simulator_dialog.on_ok(None)
 
@@ -220,7 +220,7 @@ class VisualizerWindow(QMainWindow):
                          self.save_instance)))
         menu_file.addAction(action)
         self.addAction(action)
-
+        
         action = QAction('Save plan', self)
         action.setShortcut('Ctrl+A')
         action.setStatusTip('Saves the current plan to a file')
@@ -361,6 +361,13 @@ class VisualizerWindow(QMainWindow):
         menu_windows.addAction(action)
         self.addAction(action)
 
+        action = QAction('Hide Constraints', self)
+        action.setShortcut('Ctrl+H+C')
+        action.setStatusTip('constraints')
+        action.triggered.connect(self.hide_visible_constraints)
+        menu_windows.addAction(action)
+        self.addAction(action)
+
         action = QAction('Robot monitor', self)
         action.setShortcut('Ctrl+M')
         action.setStatusTip('Show a window the contains information about a specific robot')
@@ -472,7 +479,12 @@ class VisualizerWindow(QMainWindow):
             dialog.set_address(server_socket.get_host(), server_socket.get_port())
         dialog.on_ok()
     def make_constraints_visible(self):
-        self._model_view.update(True)
+        self._model.enable_constraints()
+        self._model_view.update()
+    def hide_visible_constraints(self):
+        self._model.disable_constraints()
+        self._model_view.update()
+        
     def exit(self):
         self._solver_socket.close()
         self._simulator_socket.close()

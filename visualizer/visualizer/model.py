@@ -20,7 +20,7 @@ class Model(object):
         self._notifier = None
         self._num_steps = 0
         self._current_step = 0
-
+        self.display_constraints = False
         self._displayed_steps = -1
         self.agent_final_locs = []
         self.init_agent_locations = []
@@ -50,7 +50,7 @@ class Model(object):
         self._num_steps = 0
         self._current_step = 0
         self._displayed_steps = -1
-
+        self.display_constraints = False
         self.init_agent_locations = []
         self.all_agent_movements = []
         self.agent_locations_sorted = []
@@ -60,7 +60,12 @@ class Model(object):
         self.edge_constraints = []
         self.agent_final_locs = []
         self.update_windows()
-    
+    def enable_constraints(self):
+        self.display_constraints = True
+    def disable_constraints(self):
+        self.display_constraints = False
+    def are_constraints_visible(self):
+        return self.display_constraints    
     def set_instance_loaded(self,loaded):
         self.instance_loaded = loaded
     def set_vertex_constraints(self,new_vertex_constraints):
@@ -553,7 +558,35 @@ class Model(object):
     def save_answer_to_file(self, file_name):
         ofile = open(file_name, 'w')
         try:
-
+            all_vertex_constraints_line = "\n%"
+            if len(self.vertex_constraints) > 0:
+                all_vertex_constraints_line += "Vertex Constraints: "
+            if len(self.vertex_constraints) > 0:
+                for constraint in self.vertex_constraints:
+                    x1 = constraint[0][0] 
+                    y1 = constraint[0][1] 
+                    agent_num = constraint[1] 
+                    time_step = constraint[2]
+                    constraint_line = "((" +str(x1)+","+str(y1)+")," +str(agent_num) +"," +str(time_step) + ")"
+                    all_vertex_constraints_line += constraint_line + " "
+            all_edge_constraints_line = "\n%"
+            if len(self.edge_constraints) > 0:
+                all_edge_constraints_line += "Edge Constraints: "
+            if len(self.edge_constraints) > 0:
+                for constraint in self.edge_constraints:
+                    x1 = constraint[0][0] 
+                    y1 = constraint[0][1]
+                    x2 = constraint[1][0] 
+                    y2 = constraint[1][1]
+                     
+                    agent_num = constraint[2] 
+                    time_step = constraint[3]
+                    constraint_line = "((" +str(x1)+","+str(y1)+"),("+str(x2) +"," +str(y2) + "),"+str(agent_num) +"," +str(time_step) + ")"
+                    all_edge_constraints_line += constraint_line + " "
+            if len(self.vertex_constraints) > 0:
+                ofile.write(all_vertex_constraints_line +" \n")
+            if len(self.edge_constraints) > 0:
+                ofile.write(all_edge_constraints_line +" \n")
             for items_dic in self._graphic_items.values():
                 for item in items_dic.values():
                     for action in item.to_occurs_str():

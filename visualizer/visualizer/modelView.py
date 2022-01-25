@@ -381,7 +381,7 @@ class ModelView(QGraphicsView):
             self._scene.removeItem(item)
         self._items_in_scene = []
 
-    def update(self, show_constraints = False):
+    def update(self):
         if self._model == None: 
             return 0
         self._line_hlength = (self._w_distance) * self._model.get_grid_size()[0] + self._border_size
@@ -451,7 +451,7 @@ class ModelView(QGraphicsView):
                                         pen, brush_final_locations)
             self._items_in_scene.append(rect)
         #draw constraints
-        if show_constraints:
+        if self._model.are_constraints_visible():
             for constraint in self._model.get_vertex_constraints():
                 xPos = (constraint[0][0]-1) * self._w_distance
                 yPos = (constraint[0][1]-1) * self._h_distance
