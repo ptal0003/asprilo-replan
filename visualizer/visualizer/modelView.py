@@ -483,7 +483,6 @@ class ModelView(QGraphicsView):
         
         #draw items
         for item_dic in self._model.iterate_graphic_dictionaries():
-            print("Drawing items")
             count = len(item_dic)
             number = 1
             for item in item_dic.values():

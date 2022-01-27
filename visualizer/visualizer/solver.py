@@ -417,6 +417,8 @@ class Solverlazycbs(Solver):
         #     for atom in data:
         #         f.write(atom + '.\n')
         viz_instance2solve = []
+        #Resetting the number of robots each time it is solved
+        self.number_of_robots = 0
         #Data contains all the information from the visualizer, it is called in network.py and contains the content of model.to_actions_str()
         for line in data:
             #Extracting time step and grid size from the data sent
@@ -425,7 +427,7 @@ class Solverlazycbs(Solver):
                line_split = line.split("\t")
                self.grid_size_and_time = line_split
             #Increasing the number of robots each time an init robot statement is encountered
-            elif "init" in line and "robot" in line:
+            elif "init" in line and "robot" in line and "at" in line:
                 self.number_of_robots += 1
             else:
                 viz_instance2solve.append(line + '.\n')
@@ -467,27 +469,22 @@ class Solverlazycbs(Solver):
         map_file_name = "../lazycbs-generated-instances-and-plans/map.ecbs"
         #Getting the scen file through the instance and remaining plan
         scene_file_name = convert("../lazycbs-generated-instances-and-plans/current-instance.lp","../lazycbs-generated-instances-and-plans/remaining-plan.lp",map_file_name ,self.number_of_robots)
-        #Resetting the number of robots each time it is solved
-        self.number_of_robots = 0
         new_cost = 0
         with open("../lazycbs-generated-instances-and-plans/remaining-plan.lp", "r") as plan_file_reader:
             all_lines = plan_file_reader.readlines()
             for line in all_lines:
                 if "move" in line:
                     new_cost += 1
-        #constraint1 = (0,((1,0),(-1,-2)),3,-100)
-        constraint2 = (0,((0,4),(-1,-2)),1,-100)
-        
-        temp=init("../lazycbs-generated-instances-and-plans/map.ecbs",scene_file_name, 2,[constraint2])
+        temp=init("../lazycbs-generated-instances-and-plans/map.ecbs",scene_file_name, self.number_of_robots,[])
         constraint_line = ""
-        print(temp)
+
         temp = temp.split("\n")
         for line in temp:
             if "Constraints" in line:
                 line_split = line.split()
                 if len(line_split) > 1:
                     constraint_line = line
-        new_plan_file_name = convert_solution_to_plan(temp, 2)
+        new_plan_file_name = convert_solution_to_plan(temp, self.number_of_robots)
         lines = []
         
         now = datetime.now()

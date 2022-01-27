@@ -704,7 +704,6 @@ class Model(object):
                                                 create_dictionarie)
     #Takes coordinates on the grid as input and gives information about robots at the cell
     def get_robot_info_at_node(self, x, y):
-        print("Robot info being called")
         output_str = ''
         #List of robots passing x,y along with the time step at which they are at x,y
         robots_passing = []
@@ -718,7 +717,6 @@ class Model(object):
             output_str += "\nRobot " + str(robots_passing[i][0]) + " passes at " + str(robots_passing[i][1])
         #Iterating through all vertex constraints and displaying relevant info
         for constraint in self.get_vertex_constraints():
-            print(constraint)
             if constraint[0][0] == x and constraint[0][1] == y:
                 output_str += "\nRobot " + str(constraint[1]) + " cannot be at (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") at time step " + str(constraint[2])
         
@@ -726,6 +724,14 @@ class Model(object):
             if (constraint[0][0] == x and constraint[0][1] == y) or (constraint[1][0] == x and constraint[1][1] == y):
                 output_str += "\nRobot " + str(constraint[1]) + " cannot travel from (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") to "+"("+str(constraint[1][0]) + "," + str(constraint[1][1]) + ")"+" at time step " + str(constraint[2])
         
+        #Iterating through all the agents and checking if any two consecutive locations are the same, if so, that means the agent is waiting at the node x,y
+        for i in range(self.agent_count):
+            for time_step in range(len(self.agent_locations_sorted[i]) - 1 ):
+                current_time_step_location = self.agent_locations_sorted[i][time_step]
+                next_time_step_location = self.agent_locations_sorted[i][time_step + 1]
+                if current_time_step_location[0] == x and current_time_step_location[1] == y and current_time_step_location == next_time_step_location:
+                    output_str += "\nRobot " + str(i+1) + " waiting" + " at time step " + str(time_step)    
+
         return output_str
     def process_new_constraints(self, new_vertex_constraints, new_edge_constraints, existing_vertex_constraints, existing_edge_constraints, time_step):
         updated_vertex_constraints = []

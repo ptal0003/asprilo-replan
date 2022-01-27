@@ -190,7 +190,7 @@ class SolverSocket(VisualizerSocket):
                 elif (int(constraint_split[6]) > 0 and int(constraint_split[7]) > 0) and not (int(constraint_split[2]) > 0 and int(constraint_split[3]) > 0):
                     new_vertex_constraints.append(((int(constraint_split[7]) + 1,int(constraint_split[6]) + 1), int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
                 elif (int(constraint_split[6]) > 0 and int(constraint_split[7]) > 0) and (int(constraint_split[2]) > 0 and int(constraint_split[3]) > 0):
-                    new_vertex_constraints.append((  (int(constraint_split[3]) + 1,int(constraint_split[2]) + 1) ,(int(constraint_split[7]) + 1,int(constraint_split[6]) + 1) , int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
+                    new_edge_constraints.append((  (int(constraint_split[3]) + 1,int(constraint_split[2]) + 1) ,(int(constraint_split[7]) + 1,int(constraint_split[6]) + 1) , int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
             self._model.clear()
             self._parser.parse_file(new_instance_file,clear = True, clear_actions = True)
             self._parser.parse_file(new_plan_file,clear = True, clear_actions = True)
