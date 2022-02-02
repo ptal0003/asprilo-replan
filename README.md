@@ -73,6 +73,13 @@ In the image, lazycbs can be replaced with any other solver. Asprilo and the sol
 - Displaying the information at each node: 
      * https://github.com/ptal0003/asprilo-replan/blob/dd0d2a428390fa16617096b324d5afb1aef35508/visualizer/visualizer/model.py#L652 accepts the coordinates of the          node, iterates through the location of all agents, finds if the robots pass/wait at the node(x,y), create a relevant string and return it.
      * Displaying the information on hover is done at: https://github.com/ptal0003/asprilo-replan/blob/dd0d2a428390fa16617096b324d5afb1aef35508/visualizer/visualizer/modelView.py#L205
+ - Storing and displaying constraints: lazycbs compiled file has been modified to send constraints, rather than reduced barriers. These constraints are read in Solver.py at https://github.com/ptal0003/asprilo-replan/blob/74bffe423a7ec6b8b92f8e8c2fd5c294bcbe6af5/visualizer/visualizer/solver.py#L485 
  
+These constraints are then sent to the Visualizer at https://github.com/ptal0003/asprilo-replan/blob/74bffe423a7ec6b8b92f8e8c2fd5c294bcbe6af5/visualizer/visualizer/solver.py#L523 
+
+Inside the visualizer at Network.py, they are classified into vertex and edge constraints, these are stored in the Model from where they will be displayed.
+
+Displaying any of the graphic items is done through modelView.py. Constraints are displayed at https://github.com/ptal0003/asprilo-replan/blob/74bffe423a7ec6b8b92f8e8c2fd5c294bcbe6af5/visualizer/visualizer/modelView.py#L453 .
+These lines of code iterate through all the constraints, both edge and vertex included. Create a graphic item and draw it using the brush specified as the last argument https://github.com/ptal0003/asprilo-replan/blob/74bffe423a7ec6b8b92f8e8c2fd5c294bcbe6af5/visualizer/visualizer/modelView.py#L458
  
 
