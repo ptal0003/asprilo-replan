@@ -144,7 +144,7 @@ class ModelView(QGraphicsView):
             action = QAction('add robot', self)
             action.setShortcut('Ctrl + R')
             action.setStatusTip('Adds a robot to the selected node')
-            action.triggered.connect(lambda: self._add_item('robot', x, y))
+            action.triggered.connect(lambda: self._add_robot(x,y))
             self._menu.addAction(action)
 
         if shelf is not None:
@@ -190,6 +190,9 @@ class ModelView(QGraphicsView):
 
         self._menu.popup(QPoint(event.x(),event.y()))
 
+    def _add_robot(self, x, y):
+            self._model.robot_added_manually()
+            self._add_item('robot',x,y)
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton or event.button() == Qt.MiddleButton:
             self._menu.hide()
@@ -260,6 +263,8 @@ class ModelView(QGraphicsView):
 
     def _add_item(self, kind, x, y):
         item = self._model.create_item(kind, add_immediately = True)
+        self._model.add_initial_agent_location(item.get_id(),x,y)
+
         item.set_starting_position(x, y)
         item.set_position(x, y)
         self._menu.hide()

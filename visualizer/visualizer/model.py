@@ -34,6 +34,8 @@ class Model(object):
         self.vertex_constraints = []
         self.edge_constraints = []
         self.agent_final_location_dict = {}
+        self.agent_initial_location_dict = {}
+        self.instance_modified_manually = False
     def clear(self):
         for window in self._windows:
             if isinstance(window, ModelView):
@@ -60,7 +62,16 @@ class Model(object):
         self.vertex_constraints = []
         self.edge_constraints = []
         self.agent_final_locs = []
+        self.instance_modified_manually = False
         self.update_windows()
+    def get_init_locations_dict(self):
+        return self.agent_initial_location_dict
+    def get_final_locations_dict(self):
+        return self.agent_final_location_dict
+    def robot_added_manually(self):
+        self.instance_modified_manually = True
+    def is_instance_modified(self):
+        return self.instance_modified_manually
     def enable_constraints(self):
         self.display_constraints = True
     def disable_constraints(self):
@@ -73,6 +84,10 @@ class Model(object):
         self.vertex_constraints = new_vertex_constraints
     def set_edge_constraints(self,new_edge_constraints):
         self.edge_constraints = new_edge_constraints
+    def add_initial_agent_location(self,ID,x,y):
+        if ID not in self.agent_initial_location_dict:
+            self.agent_initial_location_dict[ID] = (x,y)
+        
     def get_vertex_constraints(self):
         return self.vertex_constraints
     def get_edge_constraints(self):
@@ -113,9 +128,11 @@ class Model(object):
     def is_time_step_provided(self):
         return self.time_step_provided
     def _add_item2(self, item):
+        print("116 Model.py")
         if item is None:
             return
         dictionarie = self._map_item_to_dictionarie(item, True)
+        print(dictionarie)
         if dictionarie is None:
             return
         if str(item.get_id()) in dictionarie:
@@ -129,6 +146,7 @@ class Model(object):
         dictionarie[str(item.get_id())] = item
 
     def add_item(self, item, add_immediately = False):
+        print("133 Model.py")
         if add_immediately:
             return self._add_item2(item)
         if item is None:

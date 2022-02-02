@@ -1,3 +1,4 @@
+import json
 from threading import Thread
 import socket
 import select
@@ -209,7 +210,9 @@ class SolverSocket(VisualizerSocket):
         if self._s == None or self._model == None: return -1
         self._s.send('%$RESET.'.encode('utf-8'))
         self._model.set_editable(False)
-        time_step_str = "%Time Step and Grid Size:\t" + str(self._model.get_current_step()) + "\t" + str(self._model.get_grid_size()[0]) + "\t" + str(self._model.get_grid_size()[1])
+        init_locations_str = json.dumps(self._model.get_init_locations_dict())
+        final_locations_str = json.dumps(self._model.get_final_locations_dict())
+        additional_info_str = "%Time Step and Grid Size:\t" + str(self._model.get_current_step()) + "\t" + str(self._model.get_grid_size()[0]) + "\t" + str(self._model.get_grid_size()[1]) +"\t"+str(self._model.is_instance_modified()) + "\t" + init_locations_str + "\t" + final_locations_str 
         if not path.exists("../lazycbs-generated-instances-and-plans"):
             os.mkdir("../lazycbs-generated-instances-and-plans")
 
@@ -225,8 +228,9 @@ class SolverSocket(VisualizerSocket):
         for action in self._model.to_actions_str():        #send actions
             action = action.replace('\n', '')
             self._s.send(str(action).encode('utf-8'))
-        self._s.send(str(time_step_str).encode('utf-8'))
+        self._s.send(str(additional_info_str).encode('utf-8'))
         self._s.send('\n'.encode('utf-8'))
+        
         self.run_connection()
 
     def run(self):

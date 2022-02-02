@@ -347,14 +347,18 @@ class VisualizerGraphicItem(QGraphicsItem, visualizerItem.VisualizerItem):
         """
 
         return
-
+    def get_id(self):
+        """
+        Returns the id of the item.
+        """
+        return self._id
     def get_name(self):
         """
         Returns the name of the item.
         """
 
         return self._kind_name
-
+    
     def get_position(self):
         """
         Return the position of an item.

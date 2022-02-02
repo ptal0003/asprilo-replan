@@ -4,7 +4,7 @@
 # All solvers use a given encoding to solve the problems. The solvers use the networking
 # interface from the visualizer and are written to work along with it.
 # This script provides an one shot varaint, an incremental and an interactive solver variant.
-import shutil
+import json
 import argparse
 import select
 import socket
@@ -156,6 +156,8 @@ class Solver(object):
                     if not new_data or new_data == '':
                         self.close()
                         return 1
+                    if "Instance Modified:" in self._raw_data:
+                        print(self._raw_data)
                     self._raw_data += new_data
                     #process the data if the visualizer finished sending
                     #the visualizer ends every sending process with the '\n' character
@@ -405,11 +407,16 @@ class SolverInt(SolverInc):
         return True
 
 class Solverlazycbs(Solver):
+    
     def __init__(self):
         super(Solverlazycbs, self).__init__()
         self.grid_size_and_time = ""
         self.time_step = 0
         self.number_of_robots = 0
+        self.instance_modified = False
+        self.agent_starting_locs_dict = {}
+        self.agent_final_locs_dict = {}
+        self.agent_movements_dict = {}
     # handels the asp atoms
     def on_data(self, data):
         # # create asp file to translate
@@ -439,6 +446,22 @@ class Solverlazycbs(Solver):
         #Width and height of the ecbs file is 2 more than the width of the map, this is because of the padding
         w = int(self.grid_size_and_time[2])+2
         h = int(self.grid_size_and_time[3])+2
+        self.instance_modified = (self.grid_size_and_time[4] == "True")
+        self.agent_starting_locs_dict = json.loads(self.grid_size_and_time[5])
+        self.agent_final_locs_dict = json.loads(self.grid_size_and_time[6])
+        
+        #Making sure the final and initial location for the robots is present when target is not entered for a particular agent, in this case target location = current location
+        for key in self.agent_starting_locs_dict:
+            if not key in self.agent_final_locs_dict:
+                self.agent_final_locs_dict[key] = self.agent_starting_locs_dict[key]
+        for key in self.agent_starting_locs_dict:
+            x1 = self.agent_starting_locs_dict[key][0]
+            y1 = self.agent_starting_locs_dict[key][1]
+            
+            x2 = self.agent_final_locs_dict[key][0]
+            y2 = self.agent_final_locs_dict[key][1]
+            total_movement = abs(x2 - x1) + abs(y2 - y1)
+            self.agent_movements_dict[key] = total_movement
         #Creating a 2D matrix of all 1s
         arr = [[1 for x in range(w)] for y in range(h)] 
         #Extracting all data from an instance to create a .ecbs file that represents the map layout being visualized
@@ -468,7 +491,11 @@ class Solverlazycbs(Solver):
         #Opening the file name
         map_file_name = "../lazycbs-generated-instances-and-plans/map.ecbs"
         #Getting the scen file through the instance and remaining plan
-        scene_file_name = convert("../lazycbs-generated-instances-and-plans/current-instance.lp","../lazycbs-generated-instances-and-plans/remaining-plan.lp",map_file_name ,self.number_of_robots)
+        if not self.instance_modified:
+            scene_file_name = convert("../lazycbs-generated-instances-and-plans/current-instance.lp","../lazycbs-generated-instances-and-plans/remaining-plan.lp",map_file_name ,self.number_of_robots)
+        else:
+            print("TBD 480 Solver.py")
+            #scene_file_name = create_scene_file_interactive("../lazycbs-generated-instances-and-plans/current-instance.lp","../lazycbs-generated-instances-and-plans/remaining-plan.lp",map_file_name ,self.number_of_robots)    
         new_cost = 0
         with open("../lazycbs-generated-instances-and-plans/remaining-plan.lp", "r") as plan_file_reader:
             all_lines = plan_file_reader.readlines()
