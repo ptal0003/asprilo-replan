@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from .configuration import *
 from .model import *
-    
+from .gui import *
 class MainScene(QGraphicsScene):
     def __init__(self):
         super(self.__class__, self).__init__()
@@ -40,7 +40,7 @@ class ModelView(QGraphicsView):
         self._timer = None
         self._timer_count = 1
         self._timer_scale = 1.0
-
+        self._set_target_dialog = None
         self.setDragMode(QGraphicsView.ScrollHandDrag)
         self.setContextMenuPolicy(Qt.DefaultContextMenu)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -97,7 +97,12 @@ class ModelView(QGraphicsView):
             action.setStatusTip('Adds an obstacle in the path.')
             action.triggered.connect(lambda: self._add_obstacle(x,y))
             self._menu.addAction(action)  
-        
+
+            action = QAction('Set as target', self)
+            action.setStatusTip('Sets the current node as the target for available agents.')
+            action.triggered.connect(lambda: self._add_target_location(x,y))
+            self._menu.addAction(action)  
+            
         elif self._model.is_node(x,y):
             action = QAction('add highway', self)
             action.setShortcut('Ctrl + H')
@@ -241,6 +246,12 @@ class ModelView(QGraphicsView):
         self._model.add_node(x, y)
         self._menu.hide()
         self._model.update_windows()
+    def _add_target_location(self, x, y):
+        self._set_target_dialog = SetTargetWidget(x,y)
+        self._set_target_dialog.set_model(self._model)
+        self._set_target_dialog.show()
+        self._menu.hide()
+        self._model.update_windows()
     
     def _remove_node(self, x, y):
         self._model.remove_node(x, y)
@@ -266,6 +277,7 @@ class ModelView(QGraphicsView):
         if self._model is not None:
             self._model.add_window(self)
         self.resize_to_fit()
+    
         self.update()
 
     def start_timer(self):

@@ -1505,6 +1505,75 @@ class EnablePathWidget(QScrollArea):
         
         self.update()
 
+class SetTargetWidget(QScrollArea):
+    def __init__(self,x,y):
+        super(self.__class__, self).__init__()
+        self.setWindowTitle('Target Locations')
+        self._model = None
+        self.resize(280, 200)
+        self._area = QWidget()
+        self.setWidget(self._area)
+
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self._checkboxes = {}
+        self._colors = {}
+        self._x = x
+        self._y = y
+        self._id = -1
+        self._ok_button = QPushButton('Ok', self._area)
+        self._cancel_button = QPushButton('Cancel', self._area)
+        self._ok_button.clicked.connect(self.on_ok)
+        self._cancel_button.clicked.connect(self.on_cancel)
+        
+    def onClicked(self):
+        print("BC")
+        radio_button = self.sender()
+        self._id = radio_button.id
+
+    def update(self):
+        if self._model is None:
+            return
+        for key in self._checkboxes:
+            self._checkboxes[key].setParent(None)
+        for key in self._colors:
+            self._colors[key].setParent(None)
+        self._checkboxes = {}
+        self._colors = {}
+        y_pos = 25
+        for id in range(self._model.agent_count):
+
+            if not self._model.does_final_location_exist(id + 1):
+                y_pos += 25
+                self.radiobutton = QRadioButton("Robot " + str(id + 1) + ":", self._area)
+                self.radiobutton.id = id + 1
+                self.radiobutton.toggled.connect(self.onClicked)
+                self.radiobutton.move(20,y_pos)
+        
+            
+
+        self._ok_button.move(5, y_pos + 20)
+        self._cancel_button.move(140, y_pos + 20)
+        self._area.resize(240, y_pos + 50)
+        super(self.__class__, self).update()
+
+    def on_enable_all(self, enable):
+        for key in self._checkboxes:
+            self._checkboxes[key].setChecked(enable)
+
+    def on_ok(self):
+        self._model.add_target_location(self._id, self._x, self._y)
+        self.hide()
+
+    def on_cancel(self):
+        self.hide()
+
+    def set_model(self, model):
+        self._model = model
+        if self._model is not None:
+            self._model.add_window(self)
+        
+        self.update()
+
 class RobotMonitor(VizWidget):
     def __init__(self):
         super(self.__class__, self).__init__()
