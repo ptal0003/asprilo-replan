@@ -448,7 +448,6 @@ class Solverlazycbs(Solver):
         #Width and height of the ecbs file is 2 more than the width of the map, this is because of the padding
         w = int(self.grid_size_and_time[2])+2
         h = int(self.grid_size_and_time[3])+2
-        print(w,h)
         self._x_dim = w
         self._y_dim = h
         self.instance_modified = (self.grid_size_and_time[4] == "True")
@@ -477,18 +476,17 @@ class Solverlazycbs(Solver):
                 line = line.split(',')
                 line[-5] = line[-5].replace(" ", "")
                 line[-4] = line[-4].replace(" ", "")
-                x_coord = int(line[-5])
+                x_coord = int(line[-5]) 
                 y_coord = int(line[-4])
-                arr[x_coord][y_coord] = 0
+                arr[y_coord][x_coord] = 0
         #Writing to the .ecbs file
         with open("../lazycbs-generated-instances-and-plans/map.ecbs",'w') as f:
-            f.write(str(w) + "," + str(h) + "\n")
+            f.write(str(h) + "," + str(w) + "\n")
             for i in range(h):
                 for j in range(w):
-                    f.write(str(arr[j][i]))
+                    f.write(str(arr[i][j]))
                     if(j < (w-1)):
-                        f.write(",")
-                        
+                        f.write(",")        
                 f.write("\n")
         self.solve()
         
@@ -516,6 +514,7 @@ class Solverlazycbs(Solver):
                 line_split = line.split()
                 if len(line_split) > 1:
                     constraint_line = line
+        print(temp)
         new_plan_file_name = convert_solution_to_plan(temp, self.number_of_robots)
         lines = []
         
@@ -556,7 +555,8 @@ class Solverlazycbs(Solver):
         os.remove("../lazycbs-generated-instances-and-plans/remaining-plan.lp")
         os.remove("../lazycbs-generated-instances-and-plans/complete-plan.lp")
         os.remove("../lazycbs-generated-instances-and-plans/current-instance.lp")
-        os.remove("../lazycbs-generated-instances-and-plans/current-instance.scen")
+        if os.path.isfile("../lazycbs-generated-instances-and-plans/current-instance.scen"):
+            os.remove("../lazycbs-generated-instances-and-plans/current-instance.scen")
         os.remove("../lazycbs-generated-instances-and-plans/map.ecbs")
         os.remove("../lazycbs-generated-instances-and-plans/compatible-remaining-plan.lp")
         

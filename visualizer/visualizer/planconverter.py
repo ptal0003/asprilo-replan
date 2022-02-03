@@ -21,8 +21,9 @@ def convert_solution_to_plan(arg1, arg2):
     
     with open(map_file_name, 'r') as map_file:
         all_lines = map_file.readlines()
-        x_max = int(all_lines[0][0]) 
-        y_max = int(all_lines[0][2]) 
+        
+        x_max = int(all_lines[0][2]) 
+        y_max = int(all_lines[0][0]) 
         all_lines_cleaned = [[0 for x in range(x_max - 2)] for y in range(int(y_max - 2))]  
         all_lines.remove(all_lines[0])
         for y in range(0, y_max):
@@ -31,7 +32,7 @@ def convert_solution_to_plan(arg1, arg2):
     for i in range(0, x_max):
         for j in range(0,y_max):
             if not((i ==0 or i == x_max -1) or (j ==0 or j == y_max -1)):
-                all_lines_cleaned[i-1][j-1] = all_lines[i][j]
+                all_lines_cleaned[j-1][i-1] = all_lines[j][i]
     all_lines = all_lines_cleaned
     y_max -= 2
     x_max -= 2
@@ -62,7 +63,7 @@ def convert_solution_to_plan(arg1, arg2):
             for x in range(0, x_max):
                 for y in range(0, y_max):
                     highway_counter += 1
-                    if not(all_lines[x][y] == "1"):
+                    if not(all_lines[y][x] == "1"):
                         asprilo_plan.write("init(object(highway,"+ str(highway_counter) +"),value(at,("+str(y+1)+","+str(x+1)+"))).\n")   
             #Opening the incompatible plan file to extract information about the robot         
             all_lines = all_lines_constraint_extraction
