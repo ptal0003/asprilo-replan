@@ -417,6 +417,8 @@ class Solverlazycbs(Solver):
         self.agent_starting_locs_dict = {}
         self.agent_final_locs_dict = {}
         self.agent_movements_dict = {}
+        self._x_dim = -1
+        self._y_dim = -1
     # handels the asp atoms
     def on_data(self, data):
         # # create asp file to translate
@@ -446,6 +448,9 @@ class Solverlazycbs(Solver):
         #Width and height of the ecbs file is 2 more than the width of the map, this is because of the padding
         w = int(self.grid_size_and_time[2])+2
         h = int(self.grid_size_and_time[3])+2
+        print(w,h)
+        self._x_dim = w
+        self._y_dim = h
         self.instance_modified = (self.grid_size_and_time[4] == "True")
         self.agent_starting_locs_dict = json.loads(self.grid_size_and_time[5])
         self.agent_final_locs_dict = json.loads(self.grid_size_and_time[6])
@@ -495,7 +500,7 @@ class Solverlazycbs(Solver):
             scene_file_name = convert("../lazycbs-generated-instances-and-plans/current-instance.lp","../lazycbs-generated-instances-and-plans/remaining-plan.lp",map_file_name ,self.number_of_robots)
         else:
             print("TBD 480 Solver.py")
-            #scene_file_name = create_scene_file_interactive("../lazycbs-generated-instances-and-plans/current-instance.lp","../lazycbs-generated-instances-and-plans/remaining-plan.lp",map_file_name ,self.number_of_robots)    
+            scene_file_name = create_scene_file_interactively(self.agent_starting_locs_dict,self.agent_final_locs_dict,self.agent_movements_dict,map_file_name ,self.number_of_robots, self._x_dim, self._y_dim)    
         new_cost = 0
         with open("../lazycbs-generated-instances-and-plans/remaining-plan.lp", "r") as plan_file_reader:
             all_lines = plan_file_reader.readlines()
