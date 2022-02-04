@@ -119,7 +119,11 @@ class AspParser(object):
                 temp_split = temp_str.split(",")
                 new_agent_loc = (current_agent_locs[len(current_agent_locs) - 1][0] + int(temp_split[1]),current_agent_locs[len(current_agent_locs) - 1][1] + int(temp_split[2]))
                 current_agent_locs.append(new_agent_loc)
+            
             self._model.add_agent_locations_sorted(current_agent_locs)
+            if len(self._model.get_agent_locations_sorted()) > self._model.agent_count:
+                self._model.pop_agent_location_sorted()
+
             all_agent_starting_locations = self._model.get_starting_agent_locs()
             for current_elem in all_agent_starting_locations:
                 self._model.add_initial_agent_location(current_elem[0], current_elem[1][0], current_elem[1][1])

@@ -730,13 +730,17 @@ class Model(object):
         return self._map_kind_to_dictionarie(item.get_kind_name(), 
                                                 dictionarie, 
                                                 create_dictionarie)
+    def pop_agent_location_sorted(self):
+        self.agent_locations_sorted.pop(0)
     #Takes coordinates on the grid as input and gives information about robots at the cell
     def get_robot_info_at_node(self, x, y):
         output_str = ''
         #List of robots passing x,y along with the time step at which they are at x,y
         robots_passing = []
         #Iterating through the array containing the path for each agent and checking if the node is in the path of the robot
+        print(self.agent_locations_sorted)
         if len(self.agent_locations_sorted) > 0:
+            
             for i in range(self.agent_count):
                 for j in range(len(self.agent_locations_sorted[i])):
                     if self.agent_locations_sorted[i][j] == (x,y):
@@ -745,15 +749,17 @@ class Model(object):
             for i in range(len(robots_passing)):
                 output_str += "\nRobot " + str(robots_passing[i][0]) + " passes at " + str(robots_passing[i][1])
             #Iterating through all vertex constraints and displaying relevant info
-            for constraint in self.get_vertex_constraints():
+            all_vertex_constraints = self.get_vertex_constraints()
+           
+            for constraint in all_vertex_constraints:
                 if constraint[0][0] == x and constraint[0][1] == y:
                     output_str += "\nRobot " + str(constraint[1]) + " cannot be at (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") at time step " + str(constraint[2])
             
-            for constraint in self.get_edge_constraints():
-                    print(constraint)
+            all_edge_constraints = self.get_edge_constraints()
+            for constraint in all_edge_constraints:
                 if (constraint[0][0] == x and constraint[0][1] == y) or (constraint[1][0] == x and constraint[1][1] == y):
                     
-                    output_str += "\nRobot " + str(constraint[1]) + " cannot travel from (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") to "+"("+str(constraint[1][0]) + "," + str(constraint[1][1]) + ")"+" at time step " + str(constraint[2])
+                    output_str += "\nRobot " + str(constraint[2]) + " cannot travel from (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") to "+"("+str(constraint[1][0]) + "," + str(constraint[1][1]) + ")"+" at time step " + str(constraint[2])
             
             #Iterating through all the agents and checking if any two consecutive locations are the same, if so, that means the agent is waiting at the node x,y
             for i in range(self.agent_count):
@@ -775,9 +781,11 @@ class Model(object):
 
         for edge_constraint in existing_edge_constraints:
             if edge_constraint[3] < time_step:
-                updated_edge_constraints.append(vertex_constraint)
+                updated_edge_constraints.append(edge_constraint)
 
         for edge_constraint in new_edge_constraints:
-            updated_edge_constraints.append(vertex_constraint) 
+            updated_edge_constraints.append(edge_constraint)
+        updated_vertex_constraints = list(dict.fromkeys(updated_vertex_constraints)) 
+        updated_edge_constraints = list(dict.fromkeys(updated_edge_constraints)) 
         self.vertex_constraints = updated_vertex_constraints
         self.edge_constraints = updated_edge_constraints
