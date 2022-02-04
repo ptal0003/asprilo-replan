@@ -36,6 +36,7 @@ class Model(object):
         self.agent_final_location_dict = {}
         self.agent_initial_location_dict = {}
         self.instance_modified_manually = False
+        self.initial_location_verified = False
     def clear(self):
         for window in self._windows:
             if isinstance(window, ModelView):
@@ -63,7 +64,12 @@ class Model(object):
         self.edge_constraints = []
         self.agent_final_locs = []
         self.instance_modified_manually = False
+        self.initial_location_verified = False
         self.update_windows()
+    def is_initial_location_verified(self):
+        return self.initial_location_verified
+    def initial_location_is_correct(self):
+        self.initial_location_verified = True
     def get_init_locations_dict(self):
         return self.agent_initial_location_dict
     def get_final_locations_dict(self):
@@ -85,8 +91,7 @@ class Model(object):
     def set_edge_constraints(self,new_edge_constraints):
         self.edge_constraints = new_edge_constraints
     def add_initial_agent_location(self,ID,x,y):
-        if ID not in self.agent_initial_location_dict:
-            self.agent_initial_location_dict[ID] = (x,y)
+        self.agent_initial_location_dict[ID] = (x,y)
         
     def get_vertex_constraints(self):
         return self.vertex_constraints
@@ -745,7 +750,9 @@ class Model(object):
                     output_str += "\nRobot " + str(constraint[1]) + " cannot be at (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") at time step " + str(constraint[2])
             
             for constraint in self.get_edge_constraints():
+                    print(constraint)
                 if (constraint[0][0] == x and constraint[0][1] == y) or (constraint[1][0] == x and constraint[1][1] == y):
+                    
                     output_str += "\nRobot " + str(constraint[1]) + " cannot travel from (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") to "+"("+str(constraint[1][0]) + "," + str(constraint[1][1]) + ")"+" at time step " + str(constraint[2])
             
             #Iterating through all the agents and checking if any two consecutive locations are the same, if so, that means the agent is waiting at the node x,y

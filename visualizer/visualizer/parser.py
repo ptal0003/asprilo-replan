@@ -86,6 +86,8 @@ class AspParser(object):
             #Store the timestep-wise location and movements of all agents
             current_agent_locs = []
             current_agent_movements = []
+            dx = 0
+            dy = 0
             #Adding the first location for each agent from the initial locations array calculated above
             for initial_loc in all_initial_locations:
                 if (initial_loc[0] - 1) == i:
@@ -93,6 +95,9 @@ class AspParser(object):
             #Checking if the movemement was for the current agent, adding it to the array if it was
             for movement in all_movements:
                 if (int(movement[0]) - 1) == i:
+                    current_movement = movement[1]
+                    dx += int(movement[1].arguments[0].number)
+                    dy += int(movement[1].arguments[1].number)
                     current_agent_movements.append(movement)
             #Bubble sorting all the movements according to time step to get a sorted array of robot movements for the current agent
             number_of_movements = len(current_agent_movements)
@@ -114,8 +119,14 @@ class AspParser(object):
                 temp_split = temp_str.split(",")
                 new_agent_loc = (current_agent_locs[len(current_agent_locs) - 1][0] + int(temp_split[1]),current_agent_locs[len(current_agent_locs) - 1][1] + int(temp_split[2]))
                 current_agent_locs.append(new_agent_loc)
-            if (self._model.is_time_step_provided() and self._model.is_instance_loaded()) or not self._model.is_time_step_provided():
-                self._model.add_agent_locations_sorted(current_agent_locs)
+            self._model.add_agent_locations_sorted(current_agent_locs)
+            all_agent_starting_locations = self._model.get_starting_agent_locs()
+            for current_elem in all_agent_starting_locations:
+                self._model.add_initial_agent_location(current_elem[0], current_elem[1][0], current_elem[1][1])
+            if len(all_movements) > 0:
+                x_final = all_agent_starting_locations[i][1][0] + dx
+                y_final = all_agent_starting_locations[i][1][1] + dy
+                self._model.add_target_location(i+1, x_final, y_final)
             #Turning on the path for each robot by default
             robot = self._model.get_item('robot',i + 1)
             if robot is not None:
