@@ -37,6 +37,7 @@ class Model(object):
         self.agent_initial_location_dict = {}
         self.instance_modified_manually = False
         self.initial_location_verified = False
+        self.plan_loaded = False
     def clear(self):
         for window in self._windows:
             if isinstance(window, ModelView):
@@ -65,6 +66,7 @@ class Model(object):
         self.agent_final_locs = []
         self.instance_modified_manually = False
         self.initial_location_verified = False
+        self.plan_loaded = False
         self.update_windows()
     def is_initial_location_verified(self):
         return self.initial_location_verified
@@ -191,6 +193,10 @@ class Model(object):
                     delete_items.append(key)
         for key in delete_items:
             del self._new_items[key]
+    def set_plan_file_loaded_status(self, var):
+        self.plan_loaded = var
+    def is_plan_file_loaded(self):
+        return self.plan_loaded
     def go_to_time_step(self, time_step):
         self.set_current_step(time_step)
         self.update_windows() 
@@ -572,8 +578,6 @@ class Model(object):
             ofile.write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
             ofile.write('\n%Grid size X: ' + str(self._grid_size[0]))
             ofile.write('\n%Grid size Y: ' + str(self._grid_size[1]))
-            #Stores time step additionally when saving instance file, this is to ensure that the instance/plan can be reloaded right from where the user left
-            ofile.write('\n%Time Step: ' + str(self.get_current_step()))
             ofile.write('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
             #body
             ofile.write('#program base.\n\n')
@@ -590,6 +594,9 @@ class Model(object):
     def save_answer_to_file(self, file_name):
         ofile = open(file_name, 'w')
         try:
+            #Stores time step additionally when saving instance file, this is to ensure that the instance/plan can be reloaded right from where the user left
+            ofile.write('\n%Time Step: ' + str(self.get_current_step()) + "\n")
+            
             all_vertex_constraints_line = "\n%"
             if len(self.vertex_constraints) > 0:
                 all_vertex_constraints_line += "Vertex Constraints: "
@@ -738,7 +745,6 @@ class Model(object):
         #List of robots passing x,y along with the time step at which they are at x,y
         robots_passing = []
         #Iterating through the array containing the path for each agent and checking if the node is in the path of the robot
-        print(self.agent_locations_sorted)
         if len(self.agent_locations_sorted) > 0:
             
             for i in range(self.agent_count):

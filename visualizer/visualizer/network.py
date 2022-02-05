@@ -194,7 +194,7 @@ class SolverSocket(VisualizerSocket):
                     new_edge_constraints.append((  (int(constraint_split[3]) + 1,int(constraint_split[2]) + 1) ,(int(constraint_split[7]) + 1,int(constraint_split[6]) + 1) , int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
             self._model.clear()
             self._parser.parse_file(new_instance_file,clear = True, clear_actions = True)
-            self._parser.parse_file(new_plan_file,clear = True, clear_actions = True)
+            self._parser.parse_file(new_plan_file,clear = False, clear_actions = False)
             self._model.process_new_constraints(new_vertex_constraints,new_edge_constraints,existing_vertex_constraints,existing_edge_constraints,time_step)
             return
         self._waiting = False
@@ -212,7 +212,8 @@ class SolverSocket(VisualizerSocket):
         self._model.set_editable(False)
         init_locations_str = json.dumps(self._model.get_init_locations_dict())
         final_locations_str = json.dumps(self._model.get_final_locations_dict())
-        additional_info_str = "%Time Step and Grid Size:\t" + str(self._model.get_current_step()) + "\t" + str(self._model.get_grid_size()[0]) + "\t" + str(self._model.get_grid_size()[1]) +"\t"+str(self._model.is_instance_modified()) + "\t" + init_locations_str + "\t" + final_locations_str 
+        print(self._model.get_agent_locations_sorted())
+        additional_info_str = "%Time Step and Grid Size:\t" + str(self._model.get_current_step()) + "\t" + str(self._model.get_grid_size()[0]) + "\t" + str(self._model.get_grid_size()[1]) +"\t"+str(self._model.is_instance_modified()) + "\t" + init_locations_str + "\t" + final_locations_str + "\t" + str(self._model.is_plan_file_loaded()) 
         if not path.exists("../lazycbs-generated-instances-and-plans"):
             os.mkdir("../lazycbs-generated-instances-and-plans")
 

@@ -419,6 +419,7 @@ class Solverlazycbs(Solver):
         self.agent_movements_dict = {}
         self._x_dim = -1
         self._y_dim = -1
+        self.plan_file_loaded = False
     # handels the asp atoms
     def on_data(self, data):
         # # create asp file to translate
@@ -451,6 +452,7 @@ class Solverlazycbs(Solver):
         self._x_dim = w
         self._y_dim = h
         self.instance_modified = (self.grid_size_and_time[4] == "True")
+        self.plan_file_loaded = (self.grid_size_and_time[7] == "True")
         self.agent_starting_locs_dict = json.loads(self.grid_size_and_time[5])
         self.agent_final_locs_dict = json.loads(self.grid_size_and_time[6])
         
@@ -494,10 +496,10 @@ class Solverlazycbs(Solver):
         #Opening the file name
         map_file_name = "../lazycbs-generated-instances-and-plans/map.ecbs"
         #Getting the scen file through the instance and remaining plan
-        if not self.instance_modified:
+
+        if not self.instance_modified and self.plan_file_loaded:
             scene_file_name = convert("../lazycbs-generated-instances-and-plans/current-instance.lp","../lazycbs-generated-instances-and-plans/remaining-plan.lp",map_file_name ,self.number_of_robots)
         else:
-            print("TBD 480 Solver.py")
             scene_file_name = create_scene_file_interactively(self.agent_starting_locs_dict,self.agent_final_locs_dict,self.agent_movements_dict,map_file_name ,self.number_of_robots, self._x_dim, self._y_dim)    
         new_cost = 0
         with open("../lazycbs-generated-instances-and-plans/remaining-plan.lp", "r") as plan_file_reader:
@@ -532,14 +534,15 @@ class Solverlazycbs(Solver):
             with open(final_plan,"w") as current_plan_writer:
                 
                 with open("../lazycbs-generated-instances-and-plans/complete-plan.lp","r") as current_plan_reader:
-                
+                    
                     all_plan_lines = current_plan_reader.readlines()
-
                     for line in all_plan_lines:
                         if "move" in line:
                             result = [int(d) for d in re.findall(r'-?\d+', line)]
                             if(result[len(result) - 1] < self.time_step):
                                 current_plan_writer.write(line)
+                        if "Time Step:" in line:
+                            current_plan_writer.write(line)
                 with open(new_plan_file_name,"r") as new_plan_reader:
                     all_lines = new_plan_reader.readlines()
                     for line in all_lines:

@@ -81,7 +81,7 @@ class AspParser(object):
                 self._model.update_initial_location_with_change(i+1, agent_movement_before_time_step_loaded[0], agent_movement_before_time_step_loaded[1])
         #Getting the correct starting location of all the agents with their ID in format [(ID,(x,y))]
         all_initial_locations = self._model.get_starting_agent_locs()
-        
+        print(all_initial_locations)
         for i in range(self._model.agent_count):
             #Store the timestep-wise location and movements of all agents
             current_agent_locs = []
@@ -146,6 +146,7 @@ class AspParser(object):
         value = atom.arguments[1]
         #If it is an occurs atom, on_occurs_atom is called, otherwise on_init_atom is called
         if atom.name == 'occurs' and len(atom.arguments) == 3:
+            self._model.set_plan_file_loaded_status(True)
             self._on_occurs_atom(obj, value, atom.arguments[2].number)
         elif atom.name == 'init' and len(atom.arguments) == 2:
             self._on_init_atom(obj, value)
@@ -353,22 +354,19 @@ class AspParser(object):
         if not os.path.isfile(file_name):
             print('can not open file: ', file_name)
             return -1
-        #If the time step was detected in the instance file, the model will not execute the clear statements
-        if self._model.is_time_step_provided():
-            print("Nothing will be cleared as time step is provided in instance")
-        else:
-            if clear:
+        
+        if clear:
                 self.reset_programs()
                 self.clear_model()
 
-            if clear_actions:
+        if clear_actions:
                 self.reset_programs()
                 self.clear_model_actions()
 
-            if (clear or clear_actions) and self._model_view is not None:
+        if (clear or clear_actions) and self._model_view is not None:
                 self._model_view.stop_timer()
 
-            if clear_grounder:
+        if clear_grounder:
                 self.reset_grounder()
         #Loading the file into the parser, the time step(If provided) is set in this function
         if self.load(file_name) < 0:
