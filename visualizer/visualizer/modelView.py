@@ -140,7 +140,7 @@ class ModelView(QGraphicsView):
                 action.triggered.connect(lambda: self._remove_item(robot))
                 self._menu.addAction(action)
 
-        elif self._model.is_node(x,y):
+        elif self._model.is_node(x,y) and self._model.get_current_step() == 0:
             action = QAction('add robot', self)
             action.setShortcut('Ctrl + R')
             action.setStatusTip('Adds a robot to the selected node')

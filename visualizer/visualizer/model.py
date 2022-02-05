@@ -139,7 +139,6 @@ class Model(object):
         if item is None:
             return
         dictionarie = self._map_item_to_dictionarie(item, True)
-        print(dictionarie)
         if dictionarie is None:
             return
         if str(item.get_id()) in dictionarie:
@@ -741,39 +740,43 @@ class Model(object):
         self.agent_locations_sorted.pop(0)
     #Takes coordinates on the grid as input and gives information about robots at the cell
     def get_robot_info_at_node(self, x, y):
+
         output_str = ''
-        #List of robots passing x,y along with the time step at which they are at x,y
-        robots_passing = []
-        #Iterating through the array containing the path for each agent and checking if the node is in the path of the robot
-        if len(self.agent_locations_sorted) > 0:
+        if not self.instance_modified_manually:
+            #List of robots passing x,y along with the time step at which they are at x,y
+            robots_passing = []
+            #Iterating through the array containing the path for each agent and checking if the node is in the path of the robot
+            if len(self.agent_locations_sorted) > 0:
+                
+                for i in range(self.agent_count):
+                    for j in range(len(self.agent_locations_sorted[i])):
+                        if self.agent_locations_sorted[i][j] == (x,y):
+                            robots_passing.append((i+1,j))
+                #Concatenating the output string containing information about all the robots passing (x,y)        
+                for i in range(len(robots_passing)):
+                    output_str += "\nRobot " + str(robots_passing[i][0]) + " passes at " + str(robots_passing[i][1])
+                #Iterating through all vertex constraints and displaying relevant info
+                all_vertex_constraints = self.get_vertex_constraints()
             
-            for i in range(self.agent_count):
-                for j in range(len(self.agent_locations_sorted[i])):
-                    if self.agent_locations_sorted[i][j] == (x,y):
-                        robots_passing.append((i+1,j))
-            #Concatenating the output string containing information about all the robots passing (x,y)        
-            for i in range(len(robots_passing)):
-                output_str += "\nRobot " + str(robots_passing[i][0]) + " passes at " + str(robots_passing[i][1])
-            #Iterating through all vertex constraints and displaying relevant info
-            all_vertex_constraints = self.get_vertex_constraints()
-           
-            for constraint in all_vertex_constraints:
-                if constraint[0][0] == x and constraint[0][1] == y:
-                    output_str += "\nRobot " + str(constraint[1]) + " cannot be at (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") at time step " + str(constraint[2])
-            
-            all_edge_constraints = self.get_edge_constraints()
-            for constraint in all_edge_constraints:
-                if (constraint[0][0] == x and constraint[0][1] == y) or (constraint[1][0] == x and constraint[1][1] == y):
-                    
-                    output_str += "\nRobot " + str(constraint[2]) + " cannot travel from (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") to "+"("+str(constraint[1][0]) + "," + str(constraint[1][1]) + ")"+" at time step " + str(constraint[2])
-            
-            #Iterating through all the agents and checking if any two consecutive locations are the same, if so, that means the agent is waiting at the node x,y
-            for i in range(self.agent_count):
-                for time_step in range(len(self.agent_locations_sorted[i]) - 1 ):
-                    current_time_step_location = self.agent_locations_sorted[i][time_step]
-                    next_time_step_location = self.agent_locations_sorted[i][time_step + 1]
-                    if current_time_step_location[0] == x and current_time_step_location[1] == y and current_time_step_location == next_time_step_location:
-                        output_str += "\nRobot " + str(i+1) + " waiting" + " at time step " + str(time_step)    
+                for constraint in all_vertex_constraints:
+                    if constraint[0][0] == x and constraint[0][1] == y:
+                        output_str += "\nRobot " + str(constraint[1]) + " cannot be at (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") at time step " + str(constraint[2])
+                
+                all_edge_constraints = self.get_edge_constraints()
+                for constraint in all_edge_constraints:
+                    if (constraint[0][0] == x and constraint[0][1] == y) or (constraint[1][0] == x and constraint[1][1] == y):
+                        
+                        output_str += "\nRobot " + str(constraint[2]) + " cannot travel from (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") to "+"("+str(constraint[1][0]) + "," + str(constraint[1][1]) + ")"+" at time step " + str(constraint[2])
+                
+                #Iterating through all the agents and checking if any two consecutive locations are the same, if so, that means the agent is waiting at the node x,y
+                for i in range(self.agent_count):
+                    for time_step in range(len(self.agent_locations_sorted[i]) - 1 ):
+                        current_time_step_location = self.agent_locations_sorted[i][time_step]
+                        next_time_step_location = self.agent_locations_sorted[i][time_step + 1]
+                        if current_time_step_location[0] == x and current_time_step_location[1] == y and current_time_step_location == next_time_step_location:
+                            output_str += "\nRobot " + str(i+1) + " waiting" + " at time step " + str(time_step)    
+        else:
+            output_str = "\nPlease generate a new solution at timestep 0 for the newly added robot to view node information"
         return output_str
     def process_new_constraints(self, new_vertex_constraints, new_edge_constraints, existing_vertex_constraints, existing_edge_constraints, time_step):
         updated_vertex_constraints = []
