@@ -576,7 +576,7 @@ class Solverlazycbs(Solver):
                 if len(edge_constraints) > 0:
                     all_edge_constraints_line += "Edge Constraints: "
                 if len(edge_constraints) > 0:
-                    for constraint in self.edge_constraints:
+                    for constraint in edge_constraints:
                         x1 = constraint[0][0] 
                         y1 = constraint[0][1]
                         x2 = constraint[1][0] 

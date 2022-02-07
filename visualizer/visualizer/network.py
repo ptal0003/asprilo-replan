@@ -177,9 +177,12 @@ class SolverSocket(VisualizerSocket):
             new_instance_file = line_split[2]
             self._model.clear()
             self._parser.parse_file(new_instance_file,clear = True, clear_actions = True)
+            print(self._model.get_init_locations_dict())
+            print("181 Network.py")
+            print(self._model.get_final_locations_dict())
             self._parser.parse_file(new_plan_file,clear = False, clear_actions = False)
             print(self._model.get_init_locations_dict())
-            print("189 Network.py")
+            print("185 Network.py")
             print(self._model.get_final_locations_dict())
             return
         self._waiting = False

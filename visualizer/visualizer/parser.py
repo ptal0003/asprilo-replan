@@ -117,11 +117,14 @@ class AspParser(object):
                 current_agent_locs.append(new_agent_loc)
             print("Line 118 Parser.py")
             print(current_agent_locs)
-            all_agent_starting_locations = self._model.get_starting_agent_locs()
             self._model.add_agent_locations_sorted(current_agent_locs)
             self._model.add_initial_agent_location_dict(i + 1, current_agent_locs[0][0], current_agent_locs[0][1])
+            print("Current Agent Locations:")
+            print(current_agent_locs)
             if len(current_agent_locs) > 1:
-                self._model.add_target_location(i + 1, current_agent_locs[len(current_agent_locs) - 1][0],current_agent_locs[len(current_agent_locs) - 1][0])
+                self._model.add_target_location(i + 1, current_agent_locs[len(current_agent_locs) - 1][0],current_agent_locs[len(current_agent_locs) - 1][1])
+            print("Final Location Line 124 Parser.py")
+            print(self._model.agent_final_location_dict)
             #Turning on the path for each robot by default
             robot = self._model.get_item('robot',i + 1)
             if robot is not None:
