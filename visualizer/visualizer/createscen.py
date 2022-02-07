@@ -96,12 +96,11 @@ def convert(arg1, arg2, arg3, arg4):
                         scen_file.write(str(currentAgent) + "\t" + arg3 + "\t" + str(x_dim)+ "\t"+str(y_dim) + "\t" + str(start_loc[0]) + "\t" + str(start_loc[1]) + "\t" + str(goal_loc[0]) + "\t" + str(goal_loc[1]) + "\t"+(str(abs(distance)))+"\n")
                         currentAgent += 1
                 return scen_file_name
-def create_scene_file_interactively(agent_starting_locs_dict, agent_final_locs_dict, agent_distance_dict, map_file_name, robot_count, x_dim, y_dim):
+def create_scene_file_interactively(agent_starting_locs_dict, agent_final_locs_dict, agent_distance_dict, map_file_name, x_dim, y_dim):
     scene_file_name = os.path.splitext(map_file_name)[0]+ ".scen"
     with open(scene_file_name, 'w') as scene_file_writer:
         scene_file_writer.write("version 1\n")            
         for key in agent_starting_locs_dict:
-            
             x1 = agent_starting_locs_dict[key][0] - 1
             y1 = agent_starting_locs_dict[key][1] - 1
 
@@ -109,7 +108,7 @@ def create_scene_file_interactively(agent_starting_locs_dict, agent_final_locs_d
             y2 = agent_final_locs_dict[key][1] - 1
             
             scene_file_writer.write(str(key) + "\t" + map_file_name + "\t" + str(x_dim)+ "\t"+str(y_dim) + "\t" + str(x1) + "\t" + str(y1) + "\t" + str(x2) + "\t" + str(y2) + "\t"+(str(agent_distance_dict[key]))+"\n")
-    print(scene_file_name)
+    
     return scene_file_name
 if __name__ =="__main__":
     if len(sys.argv) == 5:

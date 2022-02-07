@@ -493,23 +493,22 @@ class Solverlazycbs(Solver):
     def solve(self):
         #Opening the file name
         map_file_name = "../lazycbs-generated-instances-and-plans/map.ecbs"
-        #Getting the scen file through the instance and remaining plan
-
+        #Checking if a robot was added and a plan was loaded
         if not self.instance_modified and self.plan_file_loaded:
             scene_file_name = convert("../lazycbs-generated-instances-and-plans/current-instance.lp","../lazycbs-generated-instances-and-plans/remaining-plan.lp",map_file_name ,self.number_of_robots)
         else:
-            scene_file_name = create_scene_file_interactively(self.agent_starting_locs_dict,self.agent_final_locs_dict,self.agent_movements_dict,map_file_name ,self.number_of_robots, self._x_dim, self._y_dim)    
+            scene_file_name = create_scene_file_interactively(self.agent_starting_locs_dict,self.agent_final_locs_dict,self.agent_movements_dict,map_file_name, self._x_dim, self._y_dim)    
         new_cost = 0
         with open("../lazycbs-generated-instances-and-plans/remaining-plan.lp", "r") as plan_file_reader:
             all_lines = plan_file_reader.readlines()
             for line in all_lines:
                 if "move" in line:
                     new_cost += 1
-        temp=init("../lazycbs-generated-instances-and-plans/map.ecbs",scene_file_name, self.number_of_robots,[])
+        generated_solution_text=init("../lazycbs-generated-instances-and-plans/map.ecbs",scene_file_name, self.number_of_robots,[])
         constraint_line = ""
-
-        temp = temp.split("\n")
-        for line in temp:
+        generated_solution_text = generated_solution_text.split("\n")
+        
+        for line in generated_solution_text:
             if "Constraints" in line:
                 line_split = line.split()
                 if len(line_split) > 1:
@@ -545,7 +544,7 @@ class Solverlazycbs(Solver):
                 vertex_constraints.append(((x1 + 1,y1 + 1),agent_num,time_step))
             elif not (x1 >= 0 and y1 >= 0) and (x2 >= 0 and y2 >= 0):
                 vertex_constraints.append(((x2 + 1,y2 + 1),agent_num,time_step))
-        new_plan_file_name = convert_solution_to_plan(temp, self.number_of_robots)
+        new_plan_file_name = convert_solution_to_plan(generated_solution_text, self.number_of_robots)
         lines = []
         
         now = datetime.now()

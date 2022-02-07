@@ -175,15 +175,9 @@ class SolverSocket(VisualizerSocket):
             line_split = data.split()
             new_plan_file = line_split[1]
             new_instance_file = line_split[2]
-            self._model.clear()
+            
             self._parser.parse_file(new_instance_file,clear = True, clear_actions = True)
-            print(self._model.get_init_locations_dict())
-            print("181 Network.py")
-            print(self._model.get_final_locations_dict())
             self._parser.parse_file(new_plan_file,clear = False, clear_actions = False)
-            print(self._model.get_init_locations_dict())
-            print("185 Network.py")
-            print(self._model.get_final_locations_dict())
             return
         self._waiting = False
         for str_atom in data.split('.'):
@@ -198,7 +192,21 @@ class SolverSocket(VisualizerSocket):
         if self._s == None or self._model == None: return -1
         self._s.send('%$RESET.'.encode('utf-8'))
         self._model.set_editable(False)
-        init_locations_str = json.dumps(self._model.get_init_locations_dict())
+        init_locations = self._model.get_init_locations_dict()
+        all_agent_movements = self._model.get_agent_movements()
+        current_locations = {}
+        for key in init_locations:
+            dx = 0
+            dy = 0 
+            for movement in all_agent_movements:
+                    if int(movement[0]) == int(key) and int(movement[2]) < self._model.get_current_step() :
+                        #dx += int(movement[1].arguments[0])
+                        dx += int(movement[1].arguments[0].number)
+                        dy += int(movement[1].arguments[1].number)
+            x = init_locations[key][0] + dx
+            y = init_locations[key][1] + dy
+            current_locations[key] = (x,y)
+        init_locations_str = json.dumps(current_locations)
         final_locations_str = json.dumps(self._model.get_final_locations_dict())
         vertex_constraints_json = json.dumps(self._model.get_vertex_constraints())
         edge_constraints_json = json.dumps(self._model.get_edge_constraints())
