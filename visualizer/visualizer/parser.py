@@ -54,48 +54,44 @@ class AspParser(object):
             parser_widget.update()
 
     def on_model(self, m):
+        
         #Adding all the symbols in the atom to the model, if it is the instance file, these would be action atoms, in instance files, it would be mainly init atoms
         for x in m.symbols(atoms=True):
             #Inside on_atom, different methods are called depending on the type of the atom
             self.on_atom(x)
             self._str_model += str(x) + '\n'
+        print("Line 63 Parser.py get_agent_locations_sorted()")
+        print(self._model.get_agent_locations_sorted())
         #When the instance followed by the plan have been loaded, all occurs atoms would have been loaded in the model, this would mean that the array containing the movements of all agents at different timesteps would be ready. That array is being accessed in the next line
         all_movements = self._model.get_agent_movements()
-        #Checking if the instance file provided a time step. If a time step was provided, then the initial location would be the one before the movements until the current time step were made. Therefore, requiring us to update the initial location if a timestep was provided.
-        if self._model.is_instance_loaded():
-            #Iterating through all agents 
-            for i in range(self._model.agent_count):
-                #Stores the sum of movements until the current time step for the current agent
-                agent_movement_before_time_step_loaded = [0,0]
-                #Iterating through all the movements
-                for movement in all_movements:
-                    #Checking if the movement is for the current agent and occurred before the current time step
-                    if (int(movement[0]) - 1) == i and int(movement[2]) < self._model.get_current_step():
-                        temp_str = str(movement[1]).replace("(",",")
-                        temp_str = temp_str.replace(")",",")
-                        temp_split = temp_str.split(",")
-                        #Adding the current movement to the sum of movements before the timestep
-                        agent_movement_before_time_step_loaded[0] += int(temp_split[1])
-                        agent_movement_before_time_step_loaded[1] += int(temp_split[2])
-                #Updating the initial location by subtracting the movements before the current time step from the current position        
-                self._model.update_initial_location_with_change(i+1, agent_movement_before_time_step_loaded[0], agent_movement_before_time_step_loaded[1])
         #Getting the correct starting location of all the agents with their ID in format [(ID,(x,y))]
-        all_initial_locations = self._model.get_starting_agent_locs()
-        print(all_initial_locations)
+        print("Line 68 Parser.py get_starting_agent_locs()")
+        instance_loaded = False
+        
+        
+        if len(self._model.get_agent_locations_sorted()) > 0:
+            instance_loaded = True
+            all_initial_locations = self._model.get_agent_locations_sorted()
+        else:   
+            all_initial_locations = self._model.get_starting_agent_locs()
+        
         for i in range(self._model.agent_count):
             #Store the timestep-wise location and movements of all agents
             current_agent_locs = []
             current_agent_movements = []
             dx = 0
             dy = 0
-            #Adding the first location for each agent from the initial locations array calculated above
-            for initial_loc in all_initial_locations:
-                if (initial_loc[0] - 1) == i:
-                    current_agent_locs.append(initial_loc[1])
+            if not instance_loaded:
+                #Adding the first location for each agent from the initial locations array calculated above
+                for initial_loc in all_initial_locations:
+                    if (initial_loc[0] - 1) == i:
+                        current_agent_locs.append(initial_loc[1])
+                      
+            else:
+                current_agent_locs.append(all_initial_locations[i][1])
             #Checking if the movemement was for the current agent, adding it to the array if it was
             for movement in all_movements:
                 if (int(movement[0]) - 1) == i:
-                    current_movement = movement[1]
                     dx += int(movement[1].arguments[0].number)
                     dy += int(movement[1].arguments[1].number)
                     current_agent_movements.append(movement)
@@ -119,18 +115,13 @@ class AspParser(object):
                 temp_split = temp_str.split(",")
                 new_agent_loc = (current_agent_locs[len(current_agent_locs) - 1][0] + int(temp_split[1]),current_agent_locs[len(current_agent_locs) - 1][1] + int(temp_split[2]))
                 current_agent_locs.append(new_agent_loc)
-            
-            self._model.add_agent_locations_sorted(current_agent_locs)
-            if len(self._model.get_agent_locations_sorted()) > self._model.agent_count:
-                self._model.pop_agent_location_sorted()
-
+            print("Line 118 Parser.py")
+            print(current_agent_locs)
             all_agent_starting_locations = self._model.get_starting_agent_locs()
-            for current_elem in all_agent_starting_locations:
-                self._model.add_initial_agent_location(current_elem[0], current_elem[1][0], current_elem[1][1])
-            if len(all_movements) > 0:
-                x_final = all_agent_starting_locations[i][1][0] + dx
-                y_final = all_agent_starting_locations[i][1][1] + dy
-                self._model.add_target_location(i+1, x_final, y_final)
+            self._model.add_agent_locations_sorted(current_agent_locs)
+            self._model.add_initial_agent_location_dict(i + 1, current_agent_locs[0][0], current_agent_locs[0][1])
+            if len(current_agent_locs) > 1:
+                self._model.add_target_location(i + 1, current_agent_locs[len(current_agent_locs) - 1][0],current_agent_locs[len(current_agent_locs) - 1][0])
             #Turning on the path for each robot by default
             robot = self._model.get_item('robot',i + 1)
             if robot is not None:
@@ -290,6 +281,7 @@ class AspParser(object):
             self._programs[file_name] = ff.read()
             #Reading the lines from the last loaded file and looking for time step information in it, if it is found that means that it is an instance file and relevant variables are updated accordingly.
             all_lines = self._programs[file_name].split("\n")
+            movement_lines = []
             for line in all_lines:
                 if "Time Step:" in line:
                     #Getting the time step from the instance file
@@ -317,7 +309,6 @@ class AspParser(object):
                         constraint = constraint.replace(")",",")
                         constraint_split = constraint.split(",")
                         if len(constraint_split) > 1:
-                            print(constraint_split)
                             x1 = int(constraint_split[2])
                             y1 = int(constraint_split[3])
                             x2 = int(constraint_split[6])
@@ -327,6 +318,27 @@ class AspParser(object):
                             constraint_time_step = int(constraint_split[10])
                             constraint = ((x1,y1),(x2,y2),agent_num, constraint_time_step)
                             self._model.add_edge_constraints(constraint)
+                elif "action" in line and "move" in line:
+                    movement_lines.append(line)
+            for id in range(self._model.agent_count):
+                dx = 0
+                dy = 0
+                for line in movement_lines:
+                    line_modded = line.replace("(",",")
+                    line_modded = line_modded.replace(")",",")
+                    line_modded_split = line_modded.split(",")
+                    agent_num = int(line_modded_split[3])
+                    movement_time_step = int(line_modded_split[12])
+                    if agent_num == (id + 1) and movement_time_step < self._model.get_current_step():
+                        dx += int(line_modded_split[8])
+                        dy += int(line_modded_split[9])
+                agent_current_location_record = self._model.get_init_locations_dict()[id + 1]
+                agent_corrected_location_record = (agent_current_location_record[0] - dx, agent_current_location_record[1] - dy)
+                self._model.add_initial_agent_location_dict(id+1,agent_corrected_location_record[0],agent_corrected_location_record[1])
+                
+                self._model.set_agent_location_sorted(id,agent_corrected_location_record[0], agent_corrected_location_record[1])
+            print("Line 349 Parser.py")
+            print(self._model.get_agent_locations_sorted())
             ff.close()
             if self._parser_widget is not None:
                 self._parser_widget.update()
@@ -334,6 +346,9 @@ class AspParser(object):
             print(error)
             print('file loading failed')
             return -2
+        print("Line 357 Parser.py")
+        print(self._model.get_agent_locations_sorted())
+            
         return 0
 
     def parse(self):
@@ -368,12 +383,15 @@ class AspParser(object):
 
         if clear_grounder:
                 self.reset_grounder()
+        
         #Loading the file into the parser, the time step(If provided) is set in this function
         if self.load(file_name) < 0:
             return -1
         #Parses individual atoms and adds them to the model, depending on actions/init statements, different methods are called inside on_atom
         if self.parse() < 0:
                 return -2
+        #print("Line 400 Parser.py")
+        #print(self._model.get_agent_locations_sorted())
         return 0
 
     def load_instance(self, file_name, create_png = False):

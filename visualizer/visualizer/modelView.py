@@ -263,7 +263,7 @@ class ModelView(QGraphicsView):
 
     def _add_item(self, kind, x, y):
         item = self._model.create_item(kind, add_immediately = True)
-        self._model.add_initial_agent_location(item.get_id(),x,y)
+        self._model.add_initial_agent_location_dict(item.get_id(),x,y)
 
         item.set_starting_position(x, y)
         item.set_position(x, y)

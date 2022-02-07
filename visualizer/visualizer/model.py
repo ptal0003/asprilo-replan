@@ -22,6 +22,7 @@ class Model(object):
         self._current_step = 0
         self.display_constraints = False
         self._displayed_steps = -1
+        
         self.agent_final_locs = []
         self.init_agent_locations = []
         self.all_agent_movements = []
@@ -55,18 +56,24 @@ class Model(object):
         self._num_steps = 0
         self._current_step = 0
         self._displayed_steps = -1
-        self.display_constraints = False
+        
+        self.agent_final_locs = []
         self.init_agent_locations = []
         self.all_agent_movements = []
         self.agent_locations_sorted = []
         self.instance_loaded = False
         self.time_step_provided = False
+        self.instance_files_loaded = []
+        self.plan_files_loaded = []
+        self.agent_count = 0
         self.vertex_constraints = []
         self.edge_constraints = []
-        self.agent_final_locs = []
+        self.agent_final_location_dict = {}
+        self.agent_initial_location_dict = {}
         self.instance_modified_manually = False
         self.initial_location_verified = False
         self.plan_loaded = False
+
         self.update_windows()
     def is_initial_location_verified(self):
         return self.initial_location_verified
@@ -92,9 +99,10 @@ class Model(object):
         self.vertex_constraints = new_vertex_constraints
     def set_edge_constraints(self,new_edge_constraints):
         self.edge_constraints = new_edge_constraints
-    def add_initial_agent_location(self,ID,x,y):
+    def add_initial_agent_location_dict(self,ID,x,y):
         self.agent_initial_location_dict[ID] = (x,y)
-        
+    def set_agent_location_sorted(self, ID, x,y):
+        self.agent_locations_sorted[ID] = (ID + 1,(x,y))
     def get_vertex_constraints(self):
         return self.vertex_constraints
     def get_edge_constraints(self):
@@ -778,23 +786,4 @@ class Model(object):
         else:
             output_str = "\nPlease generate a new solution at timestep 0 for the newly added robot to view node information"
         return output_str
-    def process_new_constraints(self, new_vertex_constraints, new_edge_constraints, existing_vertex_constraints, existing_edge_constraints, time_step):
-        updated_vertex_constraints = []
-        updated_edge_constraints = []
-        for vertex_constraint in existing_vertex_constraints:
-            if vertex_constraint[2] < time_step:
-                updated_vertex_constraints.append(vertex_constraint)
-
-        for vertex_constraint in new_vertex_constraints:
-            updated_vertex_constraints.append(vertex_constraint)   
-
-        for edge_constraint in existing_edge_constraints:
-            if edge_constraint[3] < time_step:
-                updated_edge_constraints.append(edge_constraint)
-
-        for edge_constraint in new_edge_constraints:
-            updated_edge_constraints.append(edge_constraint)
-        updated_vertex_constraints = list(dict.fromkeys(updated_vertex_constraints)) 
-        updated_edge_constraints = list(dict.fromkeys(updated_edge_constraints)) 
-        self.vertex_constraints = updated_vertex_constraints
-        self.edge_constraints = updated_edge_constraints
+    

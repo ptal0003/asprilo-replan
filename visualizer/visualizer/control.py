@@ -444,9 +444,7 @@ class VisualizerWindow(QMainWindow):
         file_name = self._file_dialog.selectedFiles()[0]        
         return self._asp_parser.parse_file(file_name,
                         clear = False, clear_actions = True)
-    def load_answer_from_provided_file(self, file_name):
-        return self._asp_parser.parse_file(file_name,
-                        clear = True, clear_actions = False)
+    
     def save_instance(self):
         file_name = self._file_dialog.selectedFiles()[0]
         self._model.save_to_file(file_name)

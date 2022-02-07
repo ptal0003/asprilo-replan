@@ -175,27 +175,12 @@ class SolverSocket(VisualizerSocket):
             line_split = data.split()
             new_plan_file = line_split[1]
             new_instance_file = line_split[2]
-            time_step = int(line_split[3])
-            existing_edge_constraints = self._model.get_edge_constraints()
-            existing_vertex_constraints = self._model.get_vertex_constraints()
-            new_edge_constraints = []
-            new_vertex_constraints = []
-            for i in range(5, len(line_split)):
-                constraint_split = line_split[i].replace(")",",")
-                constraint_split = constraint_split.replace("(",",")
-                constraint_split = constraint_split.replace("[",",")
-                constraint_split = constraint_split.replace("]",",")
-                constraint_split = constraint_split.split(",")
-                if (int(constraint_split[2]) > 0 and int(constraint_split[3]) > 0) and not (int(constraint_split[6]) > 0 and int(constraint_split[7]) > 0):
-                    new_vertex_constraints.append(((int(constraint_split[3]) + 1,int(constraint_split[2]) + 1), int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
-                elif (int(constraint_split[6]) > 0 and int(constraint_split[7]) > 0) and not (int(constraint_split[2]) > 0 and int(constraint_split[3]) > 0):
-                    new_vertex_constraints.append(((int(constraint_split[7]) + 1,int(constraint_split[6]) + 1), int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
-                elif (int(constraint_split[6]) > 0 and int(constraint_split[7]) > 0) and (int(constraint_split[2]) > 0 and int(constraint_split[3]) > 0):
-                    new_edge_constraints.append((  (int(constraint_split[3]) + 1,int(constraint_split[2]) + 1) ,(int(constraint_split[7]) + 1,int(constraint_split[6]) + 1) , int(constraint_split[9]) + 1,int(constraint_split[10]) + time_step))
             self._model.clear()
             self._parser.parse_file(new_instance_file,clear = True, clear_actions = True)
             self._parser.parse_file(new_plan_file,clear = False, clear_actions = False)
-            self._model.process_new_constraints(new_vertex_constraints,new_edge_constraints,existing_vertex_constraints,existing_edge_constraints,time_step)
+            print(self._model.get_init_locations_dict())
+            print("189 Network.py")
+            print(self._model.get_final_locations_dict())
             return
         self._waiting = False
         for str_atom in data.split('.'):
@@ -212,15 +197,16 @@ class SolverSocket(VisualizerSocket):
         self._model.set_editable(False)
         init_locations_str = json.dumps(self._model.get_init_locations_dict())
         final_locations_str = json.dumps(self._model.get_final_locations_dict())
-        print(self._model.get_agent_locations_sorted())
-        additional_info_str = "%Time Step and Grid Size:\t" + str(self._model.get_current_step()) + "\t" + str(self._model.get_grid_size()[0]) + "\t" + str(self._model.get_grid_size()[1]) +"\t"+str(self._model.is_instance_modified()) + "\t" + init_locations_str + "\t" + final_locations_str + "\t" + str(self._model.is_plan_file_loaded()) 
+        vertex_constraints_json = json.dumps(self._model.get_vertex_constraints())
+        edge_constraints_json = json.dumps(self._model.get_edge_constraints())
+        additional_info_str = "%Time Step and Grid Size:\t" + str(self._model.get_current_step()) + "\t" + str(self._model.get_grid_size()[0]) + "\t" + str(self._model.get_grid_size()[1]) +"\t"+str(self._model.is_instance_modified()) + "\t" + init_locations_str + "\t" + final_locations_str + "\t" + str(self._model.is_plan_file_loaded())  + "\t" + vertex_constraints_json + "\t" + edge_constraints_json
         if not path.exists("../lazycbs-generated-instances-and-plans"):
             os.mkdir("../lazycbs-generated-instances-and-plans")
 
         self._model.save_to_file("../lazycbs-generated-instances-and-plans/current-instance.lp")
         self._model.save_pending_answer_to_file("../lazycbs-generated-instances-and-plans/remaining-plan.lp")
         self._model.save_answer_to_file("../lazycbs-generated-instances-and-plans/complete-plan.lp")
-        self._model.restart()
+        #self._model.restart()
         #self._s.send(time_step_str.encode('utf-8'))
         for atom in self._model.to_init_str():        #send instance
             atom = atom.replace('\n', '')

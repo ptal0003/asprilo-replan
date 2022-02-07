@@ -156,8 +156,6 @@ class Solver(object):
                     if not new_data or new_data == '':
                         self.close()
                         return 1
-                    if "Instance Modified:" in self._raw_data:
-                        print(self._raw_data)
                     self._raw_data += new_data
                     #process the data if the visualizer finished sending
                     #the visualizer ends every sending process with the '\n' character
@@ -213,7 +211,6 @@ class Solver(object):
 
     #sends the data from the _to_send dictonary
     def send_step(self, step):
-        print("Solver.py 220")
         #only sends data if it was not send yet
         if step in self._to_send and step > self._sended:
             self._sended = step
@@ -231,14 +228,12 @@ class Solver(object):
                 self._control.add('base', [], atom + '.')
         if not self.solve().satisfiable:
             return
-        print("I can be solved")
         #send data to the visualizer after solving
         self.send('%$RESET.')
         self.send_step(0)
 
     #solve the instance
     def solve(self):
-        print("Solver.py 244")
         #loads the given encoding and ground
         self._control.load(self._args.encoding)
 
@@ -420,6 +415,8 @@ class Solverlazycbs(Solver):
         self._x_dim = -1
         self._y_dim = -1
         self.plan_file_loaded = False
+        self.existing_edge_constraints = []
+        self.existing_vertex_constraints = []
     # handels the asp atoms
     def on_data(self, data):
         # # create asp file to translate
@@ -455,7 +452,8 @@ class Solverlazycbs(Solver):
         self.plan_file_loaded = (self.grid_size_and_time[7] == "True")
         self.agent_starting_locs_dict = json.loads(self.grid_size_and_time[5])
         self.agent_final_locs_dict = json.loads(self.grid_size_and_time[6])
-        
+        self.existing_vertex_constraints = json.loads(str(self.grid_size_and_time[8]))
+        self.existing_edge_constraints = json.loads(str(self.grid_size_and_time[9]))
         #Making sure the final and initial location for the robots is present when target is not entered for a particular agent, in this case target location = current location
         for key in self.agent_starting_locs_dict:
             if not key in self.agent_final_locs_dict:
@@ -516,7 +514,37 @@ class Solverlazycbs(Solver):
                 line_split = line.split()
                 if len(line_split) > 1:
                     constraint_line = line
-        print(temp)
+        constraint_line_split = constraint_line.split()
+        vertex_constraints = []
+        edge_constraints = []
+        for vertex_constraint in self.existing_vertex_constraints:
+            if vertex_constraint[2] < self.time_step:
+                vertex_constraints.append(vertex_constraint)
+        for edge_constraint in self.existing_edge_constraints:
+            if edge_constraint[3] < self.time_step:
+                edge_constraints.append(edge_constraint)
+
+        if "Constraints:" in constraint_line_split:
+            constraint_line_split.remove("Constraints:")
+        for constraint in constraint_line_split: 
+            constraint_line_modded = constraint.replace("[",",")
+            constraint_line_modded = constraint_line_modded.replace("]",",")
+            constraint_line_modded = constraint_line_modded.replace("(",",")
+            constraint_line_modded = constraint_line_modded.replace(")",",")
+            constraint_line_modded_split = constraint_line_modded.split(",")
+            
+            x1 = int(constraint_line_modded_split[3])
+            y1 = int(constraint_line_modded_split[2])
+            x2 = int(constraint_line_modded_split[7])
+            y2 = int(constraint_line_modded_split[6])
+            agent_num = int(constraint_line_modded_split[9]) + 1
+            time_step = int(constraint_line_modded_split[10]) + self.time_step
+            if x1 >= 0 and x2 >= 0 and y1 >= 0 and y2 >= 0:
+                edge_constraints.append(((x1 + 1,y1 + 1),(x2 + 1,y2 + 1),agent_num,time_step))
+            elif (x1 >= 0 and y1 >= 0) and not (x2 >= 0 and y2 >= 0):
+                vertex_constraints.append(((x1 + 1,y1 + 1),agent_num,time_step))
+            elif not (x1 >= 0 and y1 >= 0) and (x2 >= 0 and y2 >= 0):
+                vertex_constraints.append(((x2 + 1,y2 + 1),agent_num,time_step))
         new_plan_file_name = convert_solution_to_plan(temp, self.number_of_robots)
         lines = []
         
@@ -533,6 +561,36 @@ class Solverlazycbs(Solver):
             
             with open(final_plan,"w") as current_plan_writer:
                 
+                all_vertex_constraints_line = "\n%"
+                if len(vertex_constraints) > 0:
+                    all_vertex_constraints_line += "Vertex Constraints: "
+                if len(vertex_constraints) > 0:
+                    for constraint in vertex_constraints:
+                        x1 = constraint[0][0] 
+                        y1 = constraint[0][1] 
+                        agent_num = constraint[1] 
+                        time_step = constraint[2]
+                        constraint_line = "((" +str(x1)+","+str(y1)+")," +str(agent_num) +"," +str(time_step) + ")"
+                        all_vertex_constraints_line += constraint_line + " "
+                all_edge_constraints_line = "\n%"
+                if len(edge_constraints) > 0:
+                    all_edge_constraints_line += "Edge Constraints: "
+                if len(edge_constraints) > 0:
+                    for constraint in self.edge_constraints:
+                        x1 = constraint[0][0] 
+                        y1 = constraint[0][1]
+                        x2 = constraint[1][0] 
+                        y2 = constraint[1][1]
+                        
+                        agent_num = constraint[2] 
+                        time_step = constraint[3]
+                        constraint_line = "((" +str(x1)+","+str(y1)+"),("+str(x2) +"," +str(y2) + "),"+str(agent_num) +"," +str(time_step) + ")"
+                        all_edge_constraints_line += constraint_line + " "
+                if len(vertex_constraints) > 0:
+                    current_plan_writer.write(all_vertex_constraints_line +" \n")
+                if len(edge_constraints) > 0:
+                    current_plan_writer.write(all_edge_constraints_line +" \n")
+
                 with open("../lazycbs-generated-instances-and-plans/complete-plan.lp","r") as current_plan_reader:
                     
                     all_plan_lines = current_plan_reader.readlines()
