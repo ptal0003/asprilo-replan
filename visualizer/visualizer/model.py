@@ -22,7 +22,7 @@ class Model(object):
         self._current_step = 0
         self.display_constraints = False
         self._displayed_steps = -1
-        
+        self.show_constraints_for_selected_agents = []
         self.init_agent_locations = []
         self.all_agent_movements = []
         self.agent_locations_sorted = []
@@ -62,7 +62,7 @@ class Model(object):
         self.agent_final_location_dict = {}
         self.agent_initial_location_dict = {}
         self.instance_modified_manually = False
-
+        self.show_constraints_for_selected_agents = []
         
         self.instance_loaded = False
         self.time_step_provided = False
@@ -75,6 +75,11 @@ class Model(object):
 
         self.update_windows()
     
+    def set_agents_to_show_constraints_for(self,list):
+        self.disable_constraints()
+        self.show_constraints_for_selected_agents = list
+    def get_agents_to_show_constraints_for(self):
+        return self.show_constraints_for_selected_agents
     
     def get_init_locations_dict(self):
         return self.agent_initial_location_dict

@@ -1504,6 +1504,74 @@ class EnablePathWidget(QScrollArea):
             self._model.add_window(self)
         
         self.update()
+class ShowSelectedConstraintsWidget(QScrollArea):
+    def __init__(self):
+        super(self.__class__, self).__init__()
+        self.setWindowTitle('Paths')
+        self._model = None
+        self.resize(280, 100)
+
+        self._area = QWidget()
+        self.setWidget(self._area)
+
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self._checkboxes = {}
+    
+        self._enable_all_button = QPushButton('enable all', self._area)
+        self._disable_all_button = QPushButton('disable all', self._area)
+        self._enable_all_button.move(5, 5)
+        self._disable_all_button.move(140, 5)
+        self._enable_all_button.clicked.connect(lambda: self.on_enable_all(True))
+        self._disable_all_button.clicked.connect(lambda: self.on_enable_all(False))
+
+        self._ok_button = QPushButton('Ok', self._area)
+        self._cancel_button = QPushButton('Cancel', self._area)
+        self._ok_button.clicked.connect(self.on_ok)
+        self._cancel_button.clicked.connect(self.on_cancel)
+
+    def update(self):
+        if self._model is None:
+            return
+        robots = self._model.filter_items(item_kind = 'robot')
+        self._checkboxes = {}
+        self._colors = {}
+        y_pos = 30
+        for robot in robots:
+            checkbox = QCheckBox("robot" + "(" + robot.get_id() + ")", self._area)
+            checkbox.move(5, y_pos)
+            checkbox.setChecked(True)
+            checkbox.show()
+            self._checkboxes[robot.get_id()] = checkbox
+            
+            y_pos += 40
+
+        self._ok_button.move(5, y_pos)
+        self._cancel_button.move(140, y_pos)
+        self._area.resize(240, y_pos + 40)
+        super(self.__class__, self).update()
+
+    def on_enable_all(self, enable):
+        for key in self._checkboxes:
+            self._checkboxes[key].setChecked(enable)
+
+    def on_ok(self):
+        agents_to_show_constraints_for = []
+        for key in self._checkboxes:
+            if self._checkboxes[key].isChecked():
+                agents_to_show_constraints_for.append(key)
+        self._model.set_agents_to_show_constraints_for(agents_to_show_constraints_for)
+        self.hide()
+        self._model.update_windows()
+
+    def on_cancel(self):
+        self.hide()
+
+    def set_model(self, model):
+        self._model = model
+        if self._model is not None:
+            self._model.add_window(self)
+        
+        self.update()
 
 class SetTargetWidget(QScrollArea):
     def __init__(self,x,y):

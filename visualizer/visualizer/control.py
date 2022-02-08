@@ -143,6 +143,10 @@ class VisualizerWindow(QMainWindow):
         self._enable_path_widget = EnablePathWidget()
         self._enable_path_widget.set_model(self._model)
 
+        self.show_selected_constraints_widget = ShowSelectedConstraintsWidget()
+        self.show_selected_constraints_widget.set_model(self._model)
+
+
         self._robot_monitor = RobotMonitor()
         self._robot_monitor.set_model(self._model)
 
@@ -354,7 +358,14 @@ class VisualizerWindow(QMainWindow):
         menu_windows.addAction(action)
         self.addAction(action)
 
-        action = QAction('Show Constraints', self)
+        action = QAction('Show Selected Constraints', self)
+        action.setShortcut('Ctrl+W')
+        action.setStatusTip('Show a window to enable constraints for specific agents')
+        action.triggered.connect(self.show_selected_constraints_widget.show)
+        menu_windows.addAction(action)
+        self.addAction(action)
+
+        action = QAction('Show All Constraints', self)
         action.setShortcut('Ctrl+S+C')
         action.setStatusTip('Show constraints')
         action.triggered.connect(self.make_constraints_visible)

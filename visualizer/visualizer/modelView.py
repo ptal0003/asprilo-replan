@@ -490,7 +490,39 @@ class ModelView(QGraphicsView):
                 self._items_in_scene.append(rect1)
                 self._items_in_scene.append(rect2)
 
-        
+        if not self._model.are_constraints_visible():
+            agents_constraints_are_visible_for = self._model.get_agents_to_show_constraints_for()
+            for agent_num in agents_constraints_are_visible_for:
+                for constraint in self._model.get_vertex_constraints():
+                    if int(agent_num) == int(constraint[1]):
+                        xPos = (constraint[0][0]-1) * self._w_distance
+                        yPos = (constraint[0][1]-1) * self._h_distance
+                        rect = self._scene.addRect(xPos*self._scaling, 
+                                                    yPos*self._scaling, 
+                                                    self._w_distance*self._scaling, 
+                                                    self._h_distance*self._scaling, 
+                                                    pen, brush_vertex_constraints)
+                        self._items_in_scene.append(rect)
+
+                for constraint in self._model.get_edge_constraints():
+                    if int(agent_num) == int(constraint[2]):
+                        xPos = (constraint[0][0]-1) * self._w_distance
+                        yPos = (constraint[0][1]-1) * self._h_distance
+                        rect1 = self._scene.addRect(xPos*self._scaling, 
+                                                    yPos*self._scaling, 
+                                                    self._w_distance*self._scaling, 
+                                                    self._h_distance*self._scaling, 
+                                                    pen, brush_edge_constraints)
+                        xPos = (constraint[1][0]-1) * self._w_distance
+                        yPos = (constraint[1][1]-1) * self._h_distance
+                        rect2 = self._scene.addRect(xPos*self._scaling, 
+                                                    yPos*self._scaling, 
+                                                    self._w_distance*self._scaling, 
+                                                    self._h_distance*self._scaling, 
+                                                    pen, brush_edge_constraints)
+                        self._items_in_scene.append(rect1)
+                        self._items_in_scene.append(rect2)
+            
         #draw items
         for item_dic in self._model.iterate_graphic_dictionaries():
             count = len(item_dic)
