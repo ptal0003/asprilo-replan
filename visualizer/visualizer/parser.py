@@ -60,12 +60,9 @@ class AspParser(object):
             #Inside on_atom, different methods are called depending on the type of the atom
             self.on_atom(x)
             self._str_model += str(x) + '\n'
-        print("Line 63 Parser.py get_agent_locations_sorted()")
-        print(self._model.get_agent_locations_sorted())
         #When the instance followed by the plan have been loaded, all occurs atoms would have been loaded in the model, this would mean that the array containing the movements of all agents at different timesteps would be ready. That array is being accessed in the next line
         all_movements = self._model.get_agent_movements()
         #Getting the correct starting location of all the agents with their ID in format [(ID,(x,y))]
-        print("Line 68 Parser.py get_starting_agent_locs()")
         instance_loaded = False
         
         
@@ -115,20 +112,16 @@ class AspParser(object):
                 temp_split = temp_str.split(",")
                 new_agent_loc = (current_agent_locs[len(current_agent_locs) - 1][0] + int(temp_split[1]),current_agent_locs[len(current_agent_locs) - 1][1] + int(temp_split[2]))
                 current_agent_locs.append(new_agent_loc)
-            print("Line 118 Parser.py")
-            print(current_agent_locs)
             self._model.add_agent_locations_sorted(current_agent_locs)
             self._model.add_initial_agent_location_dict(i + 1, current_agent_locs[0][0], current_agent_locs[0][1])
-            print("Current Agent Locations:")
-            print(current_agent_locs)
             if len(current_agent_locs) > 1:
                 self._model.add_target_location(i + 1, current_agent_locs[len(current_agent_locs) - 1][0],current_agent_locs[len(current_agent_locs) - 1][1])
-            print("Final Location Line 124 Parser.py")
-            print(self._model.agent_final_location_dict)
             #Turning on the path for each robot by default
             robot = self._model.get_item('robot',i + 1)
             if robot is not None:
                 robot.set_draw_path(True)
+        while len(self._model.get_agent_locations_sorted()) > self._model.agent_count:
+            self._model.pop_agent_location_sorted()
         self.done_instance()
 
     def on_atom(self, atom):
@@ -340,8 +333,6 @@ class AspParser(object):
                 self._model.add_initial_agent_location_dict(id+1,agent_corrected_location_record[0],agent_corrected_location_record[1])
                 
                 self._model.set_agent_location_sorted(id,agent_corrected_location_record[0], agent_corrected_location_record[1])
-            print("Line 349 Parser.py")
-            print(self._model.get_agent_locations_sorted())
             ff.close()
             if self._parser_widget is not None:
                 self._parser_widget.update()
@@ -349,8 +340,6 @@ class AspParser(object):
             print(error)
             print('file loading failed')
             return -2
-        print("Line 357 Parser.py")
-        print(self._model.get_agent_locations_sorted())
             
         return 0
 

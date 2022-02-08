@@ -23,13 +23,11 @@ class Model(object):
         self.display_constraints = False
         self._displayed_steps = -1
         
-        self.agent_final_locs = []
         self.init_agent_locations = []
         self.all_agent_movements = []
         self.agent_locations_sorted = []
         self.instance_loaded = False
         self.time_step_provided = False
-        self.instance_files_loaded = []
         self.plan_files_loaded = []
         self.agent_count = 0
         self.vertex_constraints = []
@@ -37,7 +35,6 @@ class Model(object):
         self.agent_final_location_dict = {}
         self.agent_initial_location_dict = {}
         self.instance_modified_manually = False
-        self.initial_location_verified = False
         self.plan_loaded = False
     def clear(self):
         for window in self._windows:
@@ -57,28 +54,28 @@ class Model(object):
         self._current_step = 0
         self._displayed_steps = -1
         
-        self.agent_final_locs = []
         self.init_agent_locations = []
         self.all_agent_movements = []
         self.agent_locations_sorted = []
-        self.instance_loaded = False
-        self.time_step_provided = False
-        self.instance_files_loaded = []
-        self.plan_files_loaded = []
-        self.agent_count = 0
         self.vertex_constraints = []
         self.edge_constraints = []
         self.agent_final_location_dict = {}
         self.agent_initial_location_dict = {}
         self.instance_modified_manually = False
-        self.initial_location_verified = False
+
+        
+        self.instance_loaded = False
+        self.time_step_provided = False
+        
+        self.plan_files_loaded = []
+        self.agent_count = 0
+        
+        
         self.plan_loaded = False
 
         self.update_windows()
-    def is_initial_location_verified(self):
-        return self.initial_location_verified
-    def initial_location_is_correct(self):
-        self.initial_location_verified = True
+    
+    
     def get_init_locations_dict(self):
         return self.agent_initial_location_dict
     def get_final_locations_dict(self):
@@ -107,24 +104,12 @@ class Model(object):
         return self.vertex_constraints
     def get_edge_constraints(self):
         return self.edge_constraints
-    def get_final_locations(self):
-        return self.agent_final_locs
     def is_instance_loaded(self):
         return self.instance_loaded
     def does_final_location_exist(self, id):
         return id in self.agent_final_location_dict
     def set_time_step_provided(self,provided):
         self.time_step_provided = provided
-    def update_initial_location_with_change(self,ID, dx, dy):
-        original_record = ()
-        for location in self.init_agent_locations:
-            if location[0] == ID:
-                original_record = location
-        self.init_agent_locations.remove(original_record)
-        updated_record = (ID,(int(original_record[1][0]) - dx, int(original_record[1][1]) - dy )  )
-        self.init_agent_locations.append(updated_record)
-    def add_final_location(self, location):
-        self.agent_final_locs.append(location)
     def add_agent_movements(self,record):
         self.all_agent_movements.append(record)
     def get_agent_movements(self):
@@ -143,7 +128,6 @@ class Model(object):
     def is_time_step_provided(self):
         return self.time_step_provided
     def _add_item2(self, item):
-        print("116 Model.py")
         if item is None:
             return
         dictionarie = self._map_item_to_dictionarie(item, True)
@@ -160,7 +144,6 @@ class Model(object):
         dictionarie[str(item.get_id())] = item
 
     def add_item(self, item, add_immediately = False):
-        print("133 Model.py")
         if add_immediately:
             return self._add_item2(item)
         if item is None:
@@ -207,6 +190,42 @@ class Model(object):
     def go_to_time_step(self, time_step):
         self.set_current_step(time_step)
         self.update_windows() 
+    def remove_agent(self, robot):
+        ID = int(robot.get_id())
+        element_to_be_removed = None
+        for i in range(len(self.init_agent_locations)):
+            if self.init_agent_locations[i][0] == ID:
+                element_to_be_removed = self.init_agent_locations[i]
+        if element_to_be_removed is not None:
+            self.init_agent_locations.remove(element_to_be_removed)
+        
+        element_to_be_removed = []
+        for i in range(len(self.all_agent_movements)):
+            if int(self.all_agent_movements[i][0]) == int(ID):
+                element_to_be_removed.append(i)
+        for i in reversed(element_to_be_removed):
+            self.all_agent_movements.pop(i)
+
+        self.agent_locations_sorted.pop(ID - 1)
+    
+        self.agent_count -= 1
+        element_to_be_removed = []
+        for i in range(len(self.vertex_constraints)):
+            if int(self.vertex_constraints[i][1]) == int(ID):
+                element_to_be_removed.append(i)
+        for i in reversed(element_to_be_removed):
+            self.vertex_constraints.pop(i)
+
+        element_to_be_removed = []
+        for i in range(len(self.edge_constraints)):
+            if int(self.edge_constraints[i][2]) == int(ID):
+                element_to_be_removed.append(i)
+        for i in reversed(element_to_be_removed):
+            self.edge_constraints.pop(i)
+        self.agent_final_location_dict.pop(ID)
+        self.agent_initial_location_dict.pop(ID)
+        
+
     def add_agent_locations_sorted(self, list):
         self.agent_locations_sorted.append(list)
     def get_agent_locations_sorted(self):
@@ -765,12 +784,13 @@ class Model(object):
                     output_str += "\nRobot " + str(robots_passing[i][0]) + " passes at " + str(robots_passing[i][1])
                 #Iterating through all vertex constraints and displaying relevant info
                 all_vertex_constraints = self.get_vertex_constraints()
-            
+                all_vertex_constraints = list(dict.fromkeys(all_vertex_constraints))         
                 for constraint in all_vertex_constraints:
                     if constraint[0][0] == x and constraint[0][1] == y:
                         output_str += "\nRobot " + str(constraint[1]) + " cannot be at (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") at time step " + str(constraint[2])
                 
                 all_edge_constraints = self.get_edge_constraints()
+                all_edge_constraints = list(dict.fromkeys(all_edge_constraints))
                 for constraint in all_edge_constraints:
                     if (constraint[0][0] == x and constraint[0][1] == y) or (constraint[1][0] == x and constraint[1][1] == y):
                         

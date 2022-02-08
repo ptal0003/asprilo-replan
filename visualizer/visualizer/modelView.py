@@ -131,13 +131,13 @@ class ModelView(QGraphicsView):
                     action = QAction('remove robot', self)
                     action.setShortcut('Ctrl + R')
                     action.setStatusTip('Removes a robot from the selected node')
-                    action.triggered.connect(lambda: self._remove_item(robot))
+                    action.triggered.connect(lambda: self._remove_robot(robot))
                     self._menu.addAction(action)
             else:
                 action = QAction('remove robot', self)
                 action.setShortcut('Ctrl + R')
                 action.setStatusTip('Removes a robot from the selected node')
-                action.triggered.connect(lambda: self._remove_item(robot))
+                action.triggered.connect(lambda: self._remove_robot(robot))
                 self._menu.addAction(action)
 
         elif self._model.is_node(x,y):
@@ -255,7 +255,9 @@ class ModelView(QGraphicsView):
         self._set_target_dialog.show()
         self._menu.hide()
         self._model.update_windows()
-    
+    def _remove_robot(self,robot):
+        self._model.remove_agent(robot)
+        self._remove_item(robot)
     def _remove_node(self, x, y):
         self._model.remove_node(x, y)
         self._menu.hide()
@@ -457,16 +459,7 @@ class ModelView(QGraphicsView):
                                         self._h_distance*self._scaling, 
                                         pen, brush_highway)
             self._items_in_scene.append(rect)
-        #draw final_locations
-        for node in self._model.get_final_locations():
-            xPos = (node[0]-1) * self._w_distance
-            yPos = (node[1]-1) * self._h_distance
-            rect = self._scene.addRect(xPos*self._scaling, 
-                                        yPos*self._scaling, 
-                                        self._w_distance*self._scaling, 
-                                        self._h_distance*self._scaling, 
-                                        pen, brush_final_locations)
-            self._items_in_scene.append(rect)
+        
         #draw constraints
         if self._model.are_constraints_visible():
             for constraint in self._model.get_vertex_constraints():

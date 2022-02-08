@@ -1526,7 +1526,6 @@ class SetTargetWidget(QScrollArea):
         self._cancel_button.clicked.connect(self.on_cancel)
         
     def onClicked(self):
-        print("BC")
         radio_button = self.sender()
         self._id = radio_button.id
 
