@@ -611,7 +611,7 @@ class Solverlazycbs(Solver):
             self.send("%$COMPLETE " + final_plan  +" "+final_instance + " "+ str(self.time_step) +" " +constraint_line+" \n")
         else:
             self.send("%$COMPLETE " + final_plan  +" "+final_instance+" "+str(self.time_step)+" \n")
-
+        os.remove("../lazycbs-generated-instances-and-plans/map.scen")
         os.remove("../lazycbs-generated-instances-and-plans/remaining-plan.lp")
         os.remove("../lazycbs-generated-instances-and-plans/complete-plan.lp")
         os.remove("../lazycbs-generated-instances-and-plans/current-instance.lp")
