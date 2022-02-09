@@ -331,6 +331,13 @@ class Model(object):
             for x in range(1, self._grid_size[0] + 1):
                 for y in range(self._grid_size[1] + 1, Y + 1):
                     self._nodes.append((x,y))
+            for x in range(self._grid_size[0] + 1, X + 1):
+                for y in range(1, Y + 1):
+                    self._highways.append((x,y))
+
+            for x in range(1, self._grid_size[0] + 1):
+                for y in range(self._grid_size[1] + 1, Y + 1):
+                    self._highways.append((x,y))
 
 
         else:
