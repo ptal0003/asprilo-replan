@@ -494,10 +494,8 @@ class Solverlazycbs(Solver):
         #Opening the file name
         map_file_name = "../lazycbs-generated-instances-and-plans/map.ecbs"
         #Checking if a robot was added and a plan was loaded
-        if not self.instance_modified and self.plan_file_loaded:
-            scene_file_name = convert("../lazycbs-generated-instances-and-plans/current-instance.lp","../lazycbs-generated-instances-and-plans/remaining-plan.lp",map_file_name ,self.number_of_robots)
-        else:
-            scene_file_name = create_scene_file_interactively(self.agent_starting_locs_dict,self.agent_final_locs_dict,self.agent_movements_dict,map_file_name, self._x_dim, self._y_dim)    
+        
+        scene_file_name = create_scene_file_interactively(self.agent_starting_locs_dict,self.agent_final_locs_dict,self.agent_movements_dict,map_file_name, self._x_dim, self._y_dim)    
         new_cost = 0
         with open("../lazycbs-generated-instances-and-plans/remaining-plan.lp", "r") as plan_file_reader:
             all_lines = plan_file_reader.readlines()

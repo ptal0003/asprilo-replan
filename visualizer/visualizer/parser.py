@@ -313,6 +313,7 @@ class AspParser(object):
                             agent_num = int(constraint_split[9])
                             constraint_time_step = int(constraint_split[10])
                             constraint = ((x1,y1),(x2,y2),agent_num, constraint_time_step)
+                            print(constraint)
                             self._model.add_edge_constraints(constraint)
                 elif "action" in line and "move" in line:
                     movement_lines.append(line)

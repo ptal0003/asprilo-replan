@@ -1507,7 +1507,7 @@ class EnablePathWidget(QScrollArea):
 class ShowSelectedConstraintsWidget(QScrollArea):
     def __init__(self):
         super(self.__class__, self).__init__()
-        self.setWindowTitle('Paths')
+        self.setWindowTitle('Show Constraints')
         self._model = None
         self.resize(280, 100)
 

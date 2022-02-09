@@ -90,6 +90,7 @@ class Model(object):
     def is_instance_modified(self):
         return self.instance_modified_manually
     def enable_constraints(self):
+        self.set_agents_to_show_constraints_for([])
         self.display_constraints = True
     def disable_constraints(self):
         self.display_constraints = False
@@ -784,23 +785,23 @@ class Model(object):
                     for j in range(len(self.agent_locations_sorted[i])):
                         if self.agent_locations_sorted[i][j] == (x,y):
                             robots_passing.append((i+1,j))
+                constraints_filtered = len(self.get_agents_to_show_constraints_for()) > 0
                 #Concatenating the output string containing information about all the robots passing (x,y)        
                 for i in range(len(robots_passing)):
                     output_str += "\nRobot " + str(robots_passing[i][0]) + " passes at " + str(robots_passing[i][1])
                 #Iterating through all vertex constraints and displaying relevant info
-                all_vertex_constraints = self.get_vertex_constraints()
-                all_vertex_constraints = list(dict.fromkeys(all_vertex_constraints))         
+                all_vertex_constraints = self.get_vertex_constraints()      
                 for constraint in all_vertex_constraints:
-                    if constraint[0][0] == x and constraint[0][1] == y:
-                        output_str += "\nRobot " + str(constraint[1]) + " cannot be at (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") at time step " + str(constraint[2])
-                
+                    if ((constraint[0][0] == x and constraint[0][1] == y)) and (not constraints_filtered or (constraints_filtered and str(constraint[1]) in self.get_agents_to_show_constraints_for())):
+                        output_line = "\nRobot " + str(constraint[1]) + " cannot be at (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") at time step " + str(constraint[2])
+                        if output_line not in output_str:
+                            output_str += output_line
                 all_edge_constraints = self.get_edge_constraints()
-                all_edge_constraints = list(dict.fromkeys(all_edge_constraints))
                 for constraint in all_edge_constraints:
-                    if (constraint[0][0] == x and constraint[0][1] == y) or (constraint[1][0] == x and constraint[1][1] == y):
-                        
-                        output_str += "\nRobot " + str(constraint[2]) + " cannot travel from (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") to "+"("+str(constraint[1][0]) + "," + str(constraint[1][1]) + ")"+" at time step " + str(constraint[2])
-                
+                    if ((constraint[0][0] == x and constraint[0][1] == y) or (constraint[1][0] == x and constraint[1][1] == y)) and (not constraints_filtered or (constraints_filtered and str(constraint[2]) in self.get_agents_to_show_constraints_for())):
+                        output_line = "\nRobot " + str(constraint[2]) + " cannot travel from (" + str(constraint[0][0]) + "," + str(constraint[0][1]) +") to "+"("+str(constraint[1][0]) + "," + str(constraint[1][1]) + ")"+" at time step " + str(constraint[3])
+                        if output_line not in output_str:
+                            output_str += output_line
                 #Iterating through all the agents and checking if any two consecutive locations are the same, if so, that means the agent is waiting at the node x,y
                 for i in range(self.agent_count):
                     for time_step in range(len(self.agent_locations_sorted[i]) - 1 ):
@@ -808,6 +809,10 @@ class Model(object):
                         next_time_step_location = self.agent_locations_sorted[i][time_step + 1]
                         if current_time_step_location[0] == x and current_time_step_location[1] == y and current_time_step_location == next_time_step_location:
                             output_str += "\nRobot " + str(i+1) + " waiting" + " at time step " + str(time_step)    
+                if len(self.get_agents_to_show_constraints_for()) > 0:
+                    output_str += "\nCurrently showing constraints for agents: "
+                for i in self.get_agents_to_show_constraints_for():
+                    output_str += str(i) + " "
         else:
             output_str = "\nPlease generate a new solution at timestep 0 for the newly added robot to view node information"
         return output_str
